@@ -103,7 +103,7 @@ const UserInfo = ({ advanceStep, setUserId }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [showAmounts, setShowAmounts] = useState(false);
+  const [showAmounts, setShowAmounts] = useState("no");
 
   const handleSubmit = (e) => {
     setError(false);
@@ -116,11 +116,11 @@ const UserInfo = ({ advanceStep, setUserId }) => {
         name: name,
         email: email,
         phone: phone,
-        show_amounts: showAmounts,
+        show_amounts: showAmounts === "yes",
       })
       .then((res) => {
         if (res.data.allow) {
-          setUserId(res.data.user_id);
+          setUserId(res.data.id);
           advanceStep();
         } else {
           handleFailure();
@@ -170,25 +170,25 @@ const UserInfo = ({ advanceStep, setUserId }) => {
             helperText="i.e enter 'rob' if you want, rob.withlaguna.com"
             fullWidth
           ></TextField>
-          <FormControl component="fieldset">
+          <FormControl component="fieldset" margin='none' fullWidth size='small' style={{textAlign: 'left', marginTop: theme.spacing(1)}}>
             <FormLabel component="legend">
-              Show full portfolio amounts
+              Portfolio privacy setting
             </FormLabel>
             <RadioGroup
-              aria-label="gender"
-              name="gender1"
+            aria-label="show amounts"
+              name="Show portfolio amounts"
               value={showAmounts}
-              onChange={(e) => setShowAmounts(!showAmounts)}
+              onChange={(e) => setShowAmounts(e.target.value)}
             >
               <FormControlLabel
-                value={false}
-                control={<Radio />}
-                label="No, Only %%"
+                value="no"
+                control={<Radio color='primary' size='small'/>}
+                label="Show portfolio percentage only"
               />
               <FormControlLabel
-                value={true}
-                control={<Radio />}
-                label="Yes$ "
+                value="yes"
+                control={<Radio color='primary' size='small' />}
+                label="Show portfolio amounts in USD"
               />
             </RadioGroup>
           </FormControl>
@@ -231,7 +231,6 @@ const UserInfo = ({ advanceStep, setUserId }) => {
             color: "white",
           }}
           onClick={handleSubmit}
-          disabled={error}
         >
           Submit Information
         </Button>
@@ -243,10 +242,11 @@ const UserInfo = ({ advanceStep, setUserId }) => {
 const PlaidInfo = ({ advanceStep, userId }) => {
   const [token, setToken] = useState("");
   const [error, setError] = useState(false);
+  const theme = useTheme();
 
   useEffect(() => {
     axios
-      .get(`https://api.withlaguna.com/stonks/access/plaid_token`)
+      .get(`https://api.withlaguna.com/stonks/access/plaid_token/${userId}`)
       .then((res) => {
         if (res.data.link_token) {
           setToken(res.data.link_token);
@@ -266,7 +266,7 @@ const PlaidInfo = ({ advanceStep, userId }) => {
   const onSuccess = useCallback((token, metadata) => {
     //
     axios
-      .post(`https://api.withlaguna.com/stonks/access/plaid/${user_id}`, {
+      .post(`https://api.withlaguna.com/stonks/access/plaid/${userId}`, {
         token: token,
         metadata: metadata,
       })
@@ -302,6 +302,9 @@ const PlaidInfo = ({ advanceStep, userId }) => {
         style={{
           backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
           color: "white",
+          display: 'flex',
+          margin: 'auto',
+          marginTop: theme.spacing(2)
         }}
         disabled={!ready}
       >
@@ -337,8 +340,9 @@ export const AccessForm = () => {
     else if (step === 1)
       return <UserInfo advanceStep={() => setStep(2)} setUserId={setUserId} />;
     else if (step === 2)
-      return <PlaidInfo userId={userId} advanceStep={() => setStep(3)} />;
+      return <PlaidInfo userId={3100} advanceStep={() => setStep(3)} />;
     else if (step === 3) return <Wait />;
+    else return <></>;
   }
 
   return (
@@ -351,14 +355,14 @@ export const AccessForm = () => {
         backgroundImage: "linear-gradient(to top right, #669bbc, #ecd1e5)",
       }}
     >
-      <Grid item xs={11} sm={8}>
+      <Grid item xs={11} sm={8} md={6}>
         <Paper
           style={{
             paddingTop: theme.spacing(12),
             paddingBottom: theme.spacing(12),
           }}
         >
-          {renderStep()}
+          {step >= 0 && renderStep()}
         </Paper>
       </Grid>
     </Grid>
