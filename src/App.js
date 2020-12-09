@@ -1,6 +1,7 @@
 import "./App.css";
 
 import { createMuiTheme } from "@material-ui/core/styles";
+import {ThemeProvider} from "@material-ui/core"
 import {AccessForm} from "./AccessForm.js"
 
 const theme = createMuiTheme({
