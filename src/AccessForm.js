@@ -330,7 +330,7 @@ const Wait = () => {
 };
 
 export const AccessForm = () => {
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(0);
   const [userId, setUserId] = useState();
   const theme = useTheme();
 
@@ -339,7 +339,7 @@ export const AccessForm = () => {
     else if (step === 1)
       return <UserInfo advanceStep={() => setStep(2)} setUserId={setUserId} />;
     else if (step === 2)
-      return <PlaidInfo userId={3100} advanceStep={() => setStep(3)} />;
+      return <PlaidInfo userId={userId} advanceStep={() => setStep(3)} />;
     else if (step === 3) return <Wait />;
     else return <></>;
   }
