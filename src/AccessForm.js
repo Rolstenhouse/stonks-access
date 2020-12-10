@@ -330,7 +330,8 @@ const Wait = () => {
 };
 
 export const AccessForm = () => {
-  const [step, setStep] = useState(0);
+    // Ignore Access Code
+  const [step, setStep] = useState(1);
   const [userId, setUserId] = useState();
   const theme = useTheme();
 
