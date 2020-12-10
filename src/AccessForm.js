@@ -294,7 +294,7 @@ const PlaidInfo = ({ advanceStep, userId }) => {
         updated using Plaid, the standard in banking connections.
       </Typography>
       <Typography variant="caption">Only read access is allowed</Typography>
-      {error && <Typography> Something went wrong :( </Typography>}
+      {(error || plaidError) && <Typography> Something went wrong :( </Typography>}
       <Button
         onClick={() => {
           open();
@@ -306,7 +306,6 @@ const PlaidInfo = ({ advanceStep, userId }) => {
           margin: 'auto',
           marginTop: theme.spacing(2)
         }}
-        disabled={!ready}
       >
         Connect bank account
       </Button>
