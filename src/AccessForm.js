@@ -26,6 +26,7 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  Link
 } from "@material-ui/core";
 
 const AccessCode = ({ advanceStep }) => {
@@ -131,6 +132,23 @@ const UserInfo = ({ advanceStep, setUserId }) => {
       });
   };
 
+  const [subdomainError, setSubdomainError] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const checkUnique = (body) => {
+    axios
+      .get(`https://api.withlaguna.com/stonks/access/check_unique`, {
+        params: body,
+      })
+      .then((res) => {})
+      .catch(() => {
+        if (body.subdomain)
+          setSubdomainError("Subdomain has already been claimed");
+        else if (body.email) setEmailError("Email has already been claimed");
+        else if (body.phone) setPhoneError("Phone has already been claimed");
+      });
+  };
+
   return (
     <>
       <Typography variant="h4">Account creation and configuration</Typography>
@@ -140,7 +158,8 @@ const UserInfo = ({ advanceStep, setUserId }) => {
         >
           <Typography variant="h6">Your page information</Typography>
           <Typography variant="caption">
-            Used to customize your page :)
+            Used to customize your page :){" "}
+            <Link href="https://rob.withlaguna.com">Sample Site</Link>
           </Typography>
           <TextField
             value={title}
@@ -160,34 +179,47 @@ const UserInfo = ({ advanceStep, setUserId }) => {
             value={link}
             onChange={(e) => setLink(e.target.value)}
             label="Link (optional)"
-            helperText="https://withterra.com"
+            helperText="i.e. https://withterra.com"
             fullWidth
           ></TextField>
           <TextField
             value={subdomain}
-            onChange={(e) => setSubdomain(e.target.value)}
-            label="Desired domain"
-            helperText="i.e enter 'rob' if you want, rob.withlaguna.com"
+            onChange={(e) => {
+              setSubdomain(e.target.value);
+              setSubdomainError("");
+            }}
+            onBlur={(e) => checkUnique({ subdomain: subdomain })}
+            label="Desired subdomain"
+            helperText={
+              !!subdomainError
+                ? subdomainError
+                : "i.e enter 'rob' if you want, rob.withlaguna.com"
+            }
+            error={!!subdomainError}
             fullWidth
           ></TextField>
-          <FormControl component="fieldset" margin='none' fullWidth size='small' style={{textAlign: 'left', marginTop: theme.spacing(1)}}>
-            <FormLabel component="legend">
-              Portfolio privacy setting
-            </FormLabel>
+          <FormControl
+            component="fieldset"
+            margin="none"
+            fullWidth
+            size="small"
+            style={{ textAlign: "left", marginTop: theme.spacing(1) }}
+          >
+            <FormLabel component="legend">Portfolio privacy setting</FormLabel>
             <RadioGroup
-            aria-label="show amounts"
+              aria-label="show amounts"
               name="Show portfolio amounts"
               value={showAmounts}
               onChange={(e) => setShowAmounts(e.target.value)}
             >
               <FormControlLabel
                 value="no"
-                control={<Radio color='primary' size='small'/>}
+                control={<Radio color="primary" size="small" />}
                 label="Show portfolio percentage only"
               />
               <FormControlLabel
                 value="yes"
-                control={<Radio color='primary' size='small' />}
+                control={<Radio color="primary" size="small" />}
                 label="Show portfolio amounts in USD"
               />
             </RadioGroup>
@@ -209,13 +241,27 @@ const UserInfo = ({ advanceStep, setUserId }) => {
           ></TextField>
           <TextField
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError("");
+            }}
+            onBlur={() => {
+              checkUnique({ email: email });
+            }}
+            helperText={!!emailError ? emailError : ""}
+            error={!!emailError}
             label="Email"
             fullWidth
           ></TextField>
           <TextField
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              setPhoneError("");
+            }}
+            onBlur={(e) => checkUnique({ phone: phone })}
+            helperText={!!phoneError ? phoneError : ""}
+            error={!!phoneError}
             label="Phone"
             fullWidth
           ></TextField>
@@ -239,14 +285,18 @@ const UserInfo = ({ advanceStep, setUserId }) => {
   );
 };
 
-const PlaidInfo = ({ advanceStep, userId }) => {
+const PlaidInfo = ({ advanceStep, userId, refresh }) => {
   const [token, setToken] = useState("");
   const [error, setError] = useState(false);
   const theme = useTheme();
 
   useEffect(() => {
     axios
-      .get(`https://api.withlaguna.com/stonks/access/plaid_token/${userId}`)
+      .get(`https://api.withlaguna.com/stonks/access/plaid_token/${userId}`, {
+        params: {
+          refresh: refresh,
+        },
+      })
       .then((res) => {
         if (res.data.link_token) {
           setToken(res.data.link_token);
@@ -264,7 +314,11 @@ const PlaidInfo = ({ advanceStep, userId }) => {
   };
 
   const onSuccess = useCallback((token, metadata) => {
-    //
+    // when refreshing no need to post any new data
+    if (refresh) {
+      advanceStep();
+      return;
+    }
     axios
       .post(`https://api.withlaguna.com/stonks/access/plaid/${userId}`, {
         token: token,
@@ -294,7 +348,9 @@ const PlaidInfo = ({ advanceStep, userId }) => {
         updated using Plaid, the standard in banking connections.
       </Typography>
       <Typography variant="caption">Only read access is allowed</Typography>
-      {(error || plaidError) && <Typography> Something went wrong :( </Typography>}
+      {(error || plaidError) && (
+        <Typography> Something went wrong :( </Typography>
+      )}
       <Button
         onClick={() => {
           open();
@@ -302,9 +358,9 @@ const PlaidInfo = ({ advanceStep, userId }) => {
         style={{
           backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
           color: "white",
-          display: 'flex',
-          margin: 'auto',
-          marginTop: theme.spacing(2)
+          display: "flex",
+          margin: "auto",
+          marginTop: theme.spacing(2),
         }}
       >
         Connect bank account
@@ -330,17 +386,36 @@ const Wait = () => {
 };
 
 export const AccessForm = () => {
-    // Ignore Access Code
+  // Ignore Access Code
   const [step, setStep] = useState(1);
+  const [refresh, setRefresh] = useState(false);
   const [userId, setUserId] = useState();
   const theme = useTheme();
+
+  // IF in refresh mode
+  useEffect(() => {
+    let search = window.location.search;
+    let params = new URLSearchParams(search);
+    let plaid_refresh_id = params.get("plaid_refresh");
+    if (!!plaid_refresh_id) {
+      setStep(2);
+      setRefresh(true);
+      setUserId(plaid_refresh_id);
+    }
+  }, []);
 
   function renderStep() {
     if (step === 0) return <AccessCode advanceStep={() => setStep(1)} />;
     else if (step === 1)
       return <UserInfo advanceStep={() => setStep(2)} setUserId={setUserId} />;
     else if (step === 2)
-      return <PlaidInfo userId={userId} advanceStep={() => setStep(3)} />;
+      return (
+        <PlaidInfo
+          userId={userId}
+          advanceStep={() => setStep(3)}
+          refresh={refresh}
+        />
+      );
     else if (step === 3) return <Wait />;
     else return <></>;
   }
@@ -351,7 +426,7 @@ export const AccessForm = () => {
       justify="center"
       alignItems="center"
       style={{
-        height: "100vh",
+        minHeight: "100vh",
         backgroundImage: "linear-gradient(to top right, #669bbc, #ecd1e5)",
       }}
     >
