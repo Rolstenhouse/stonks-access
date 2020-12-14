@@ -165,21 +165,21 @@ const UserInfo = ({ advanceStep, setUserId }) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             label="Title"
-            helperText="Rob's Stonks"
+            helperText="Ex) Rob's Stonks"
             fullWidth
           ></TextField>
           <TextField
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             label="Description"
-            helperText="Trading on long-term horizons"
+            helperText="Ex) Trading on long-term horizons"
             fullWidth
           ></TextField>
           <TextField
             value={link}
             onChange={(e) => setLink(e.target.value)}
-            label="Link (optional)"
-            helperText="i.e. https://withterra.com"
+            label="Personal Bio Link (optional)"
+            helperText="Twitter handle, website, Linkedin, etc. Write as https://withterra.com"
             fullWidth
           ></TextField>
           <TextField
