@@ -26,7 +26,7 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-  Link
+  Link,
 } from "@material-ui/core";
 
 const AccessCode = ({ advanceStep }) => {
@@ -401,6 +401,11 @@ export const AccessForm = () => {
       setStep(2);
       setRefresh(true);
       setUserId(plaid_refresh_id);
+    }
+    let plaid_login_id = params.get("plaid_login");
+    if (!!plaid_login_id) {
+      setStep(2);
+      setUserId(plaid_login);
     }
   }, []);
 
