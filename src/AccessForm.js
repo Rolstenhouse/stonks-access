@@ -89,7 +89,7 @@ const AccessCode = ({ advanceStep }) => {
   );
 };
 
-const UserInfo = ({ advanceStep, setUserId }) => {
+const UserInfo = ({ advanceStep, setUserId, editId, editDetails }) => {
   const theme = useTheme();
   const [error, setError] = useState(false);
 
@@ -97,14 +97,25 @@ const UserInfo = ({ advanceStep, setUserId }) => {
     setError(true);
   };
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [link, setLink] = useState("");
-  const [subdomain, setSubdomain] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [showAmounts, setShowAmounts] = useState("no");
+  const [title, setTitle] = useState(editDetails.title);
+  const [description, setDescription] = useState(editDetails.description);
+  const [link, setLink] = useState(editDetails.link);
+  const [subdomain, setSubdomain] = useState(editDetails.subdomain);
+  const [name, setName] = useState(editDetails.name);
+  const [email, setEmail] = useState(editDetails.email);
+  const [phone, setPhone] = useState(editDetails.phone);
+  const [showAmounts, setShowAmounts] = useState(editDetails.show_amounts);
+
+  useEffect(() => {
+    setTitle(editDetails.title);
+    setDescription(editDetails.description);
+    setLink(editDetails.link);
+    setSubdomain(editDetails.subdomain);
+    setName(editDetails.name);
+    setEmail(editDetails.email);
+    setPhone(editDetails.phone);
+    setShowAmounts(editDetails.show_amounts);
+  }, [editDetails]);
 
   const handleSubmit = (e) => {
     setError(false);
@@ -118,6 +129,7 @@ const UserInfo = ({ advanceStep, setUserId }) => {
         email: email,
         phone: phone,
         show_amounts: showAmounts === "yes",
+        edit: editId,
       })
       .then((res) => {
         if (res.data.allow) {
@@ -136,6 +148,11 @@ const UserInfo = ({ advanceStep, setUserId }) => {
   const [emailError, setEmailError] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const checkUnique = (body) => {
+    if (!!editId) {
+      if (body.subdomain && body.subdomain == editDetails.subdomain) return;
+      else if (body.email && body.email === editDetails.email) return;
+      else if (body.phone && body.phone === editDetails.phone) return;
+    }
     axios
       .get(`https://api.withlaguna.com/stonks/access/check_unique`, {
         params: body,
@@ -385,11 +402,38 @@ const Wait = () => {
   );
 };
 
+const Update = () => {
+  const { width, height } = useWindowSize();
+
+  return (
+    <>
+      <Confetti width={width} height={height} />
+      <Typography variant="h4">
+        Thanks for updating your page :)
+      </Typography>
+      <Typography variant="caption">
+        Feedback? Email team@withlaguna.com
+      </Typography>
+    </>
+  );
+};
+
 export const AccessForm = () => {
   // Ignore Access Code
   const [step, setStep] = useState(1);
   const [refresh, setRefresh] = useState(false);
   const [userId, setUserId] = useState();
+  const [editId, setEditId] = useState();
+  const [editDetails, setEditDetails] = useState({
+    title: "",
+    description: "",
+    link: "",
+    subdomain: "",
+    show_amounts: "no",
+    name: "",
+    email: "",
+    phone: "",
+  });
   const theme = useTheme();
 
   // IF in refresh mode
@@ -405,14 +449,43 @@ export const AccessForm = () => {
     let plaid_login_id = params.get("plaid_login");
     if (!!plaid_login_id) {
       setStep(2);
-      setUserId(plaid_login);
+      setUserId(plaid_login_id);
+    }
+    let edit_id = params.get("edit");
+    if (!!edit_id) {
+      setStep(1);
+      setEditId(edit_id);
+
+      // fetch initial props
+      axios
+        .get(`https://api.withlaguna.com/stonks/access/edit_info`, {
+          params: {
+            edit: edit_id,
+          },
+        })
+        .then((res) => {
+          let editable = Object.assign({}, res.data);
+          editable.show_amounts = !!editable.show_amounts ? "yes" : "no";
+          console.log(editable);
+          setEditDetails(editable);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
   }, []);
 
   function renderStep() {
     if (step === 0) return <AccessCode advanceStep={() => setStep(1)} />;
     else if (step === 1)
-      return <UserInfo advanceStep={() => setStep(2)} setUserId={setUserId} />;
+      return (
+        <UserInfo
+          advanceStep={() => !!editId ? setStep(4) : setStep(2)}
+          setUserId={setUserId}
+          editId={editId}
+          editDetails={editDetails}
+        />
+      );
     else if (step === 2)
       return (
         <PlaidInfo
@@ -422,6 +495,7 @@ export const AccessForm = () => {
         />
       );
     else if (step === 3) return <Wait />;
+    else if (step === 4) return <Update />;
     else return <></>;
   }
 
