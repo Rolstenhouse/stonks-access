@@ -26,6 +26,7 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
+  CircularProgress,
   Link,
 } from "@material-ui/core";
 
@@ -307,6 +308,15 @@ const PlaidInfo = ({ advanceStep, userId, refresh }) => {
   const [error, setError] = useState(false);
   const theme = useTheme();
 
+  const [showUpload, setShowUpload] = useState(false);
+  const [presignedPost, setPresignedPost] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const [uploadFile, setUploadFile] = useState({
+    preview: "",
+    raw: "",
+    name: "",
+  });
+
   useEffect(() => {
     axios
       .get(`https://api.withlaguna.com/stonks/access/plaid_token/${userId}`, {
@@ -357,6 +367,68 @@ const PlaidInfo = ({ advanceStep, userId, refresh }) => {
 
   const { open, ready, plaidError } = usePlaidLink(config);
 
+  const handleChange = (e) => {
+    if (e.target.files.length) {
+      let name = e.target.value.split("\\").pop();
+      setUploadFile({
+        preview: URL.createObjectURL(e.target.files[0]),
+        raw: e.target.files[0],
+        name: name,
+      });
+      getSignedUrl(name);
+    }
+  };
+
+  const getSignedUrl = (name) => {
+    let fileName = name.replace(/[^\w\d_\-.]+/gi, "");
+    axios
+      .get(`https://api.withlaguna.com/stonks/access/sign/${userId}`, {
+        params: { file_name: fileName },
+      })
+      .then((res) => {
+        setPresignedPost(res.data);
+      });
+  };
+
+  const onUploadProgress = (e) => {
+    console.log(e);
+  };
+
+  const handleUpload = (e) => {
+    setUploading(true);
+    e.preventDefault();
+
+    console.log(presignedPost);
+    console.log(uploadFile);
+
+    const formData = new FormData();
+    Object.keys(presignedPost.fields).forEach((k) => {
+      const v = presignedPost.fields[k];
+      formData.append(k, v);
+    });
+    formData.append("file", uploadFile.raw);
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+      onUploadProgress: (progressEvent) => {
+        const progress = parseInt(
+          Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        );
+        // Update state here
+        onUploadProgress(progress);
+      },
+    };
+
+    axios
+      .post(`${presignedPost.url}`, formData, config)
+      .then((res) => {
+        advanceStep();
+      })
+      .catch(console.error("Uploading problemo"))
+      .finally(setUploading(false));
+  };
+
   return (
     <>
       <Typography variant="h4">Connect your investment brokerage</Typography>
@@ -368,20 +440,58 @@ const PlaidInfo = ({ advanceStep, userId, refresh }) => {
       {(error || plaidError) && (
         <Typography> Something went wrong :( </Typography>
       )}
-      <Button
-        onClick={() => {
-          open();
-        }}
+      <div
         style={{
-          backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
-          color: "white",
           display: "flex",
-          margin: "auto",
+          justifyContent: "center",
           marginTop: theme.spacing(2),
+          alignItems: "center",
         }}
       >
-        Connect bank account
-      </Button>
+        <Button
+          onClick={() => {
+            open();
+          }}
+          style={{
+            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
+            color: "white",
+          }}
+          disabled={!!uploadFile.preview}
+        >
+          Connect bank account
+        </Button>
+        <div
+          style={{
+            marginLeft: theme.spacing(2),
+            marginRight: theme.spacing(2),
+          }}
+        >
+          or
+        </div>
+        {!uploadFile.preview ? (
+          <Button
+            component="label"
+            style={{ color: "linear-gradient(to top right, #A01A7D, #EC4067)" }}
+          >
+            Manually upload trades(CSV)
+            <input type="file" hidden onChange={handleChange} />
+          </Button>
+        ) : uploading ? (
+          <CircularProgress />
+        ) : (
+          <Button
+            style={{
+              backgroundImage:
+                "linear-gradient(to top right, #A01A7D, #EC4067)",
+              color: "white",
+              fontWeight: 800,
+            }}
+            onClick={handleUpload}
+          >
+            Upload {uploadFile.name}
+          </Button>
+        )}
+      </div>
     </>
   );
 };
@@ -394,6 +504,10 @@ const Wait = () => {
       <Confetti width={width} height={height} />
       <Typography variant="h4">
         Your page is building! We'll send you an email when it's ready
+      </Typography>
+      <Typography variant="p1">
+        We've gotten reports that our emails are ending in your spam box. Please
+        double-check there as well after ~5 min
       </Typography>
       <Typography variant="caption">
         Feedback? Email team@withlaguna.com
@@ -408,15 +522,17 @@ const Update = () => {
   return (
     <>
       <Confetti width={width} height={height} />
-      <Typography variant="h4">
-        Thanks for updating your page :)
-      </Typography>
+      <Typography variant="h4">Thanks for updating your page :)</Typography>
       <Typography variant="caption">
         Feedback? Email team@withlaguna.com
       </Typography>
     </>
   );
 };
+
+// const UploadTrades = ({ advanceStep, setShowUpload, userId }) => {
+
+// };
 
 export const AccessForm = () => {
   // Ignore Access Code
@@ -480,7 +596,7 @@ export const AccessForm = () => {
     else if (step === 1)
       return (
         <UserInfo
-          advanceStep={() => !!editId ? setStep(4) : setStep(2)}
+          advanceStep={() => (!!editId ? setStep(4) : setStep(2))}
           setUserId={setUserId}
           editId={editId}
           editDetails={editDetails}
