@@ -30,6 +30,8 @@ import {
   Link,
 } from "@material-ui/core";
 
+import { Alert } from "@material-ui/lab";
+
 const AccessCode = ({ advanceStep }) => {
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
@@ -90,7 +92,14 @@ const AccessCode = ({ advanceStep }) => {
   );
 };
 
-const UserInfo = ({ advanceStep, setUserId, editId, editDetails }) => {
+const UserInfo = ({
+  advanceStep,
+  setUserId,
+  editId,
+  editDetails,
+  setEditDetails,
+  refresh
+}) => {
   const theme = useTheme();
   const [error, setError] = useState(false);
 
@@ -118,6 +127,8 @@ const UserInfo = ({ advanceStep, setUserId, editId, editDetails }) => {
     setShowAmounts(editDetails.show_amounts);
   }, [editDetails]);
 
+  const add_plaid = editDetails.plaid_connected != !!editDetails.subdomain;
+
   const handleSubmit = (e) => {
     setError(false);
     axios
@@ -130,12 +141,25 @@ const UserInfo = ({ advanceStep, setUserId, editId, editDetails }) => {
         email: email,
         phone: phone,
         show_amounts: showAmounts === "yes",
-        edit: editId,
+        edit_id: editId,
       })
       .then((res) => {
         if (res.data.allow) {
           setUserId(res.data.id);
           advanceStep();
+
+          // Update details via callback?
+          setEditDetails({
+            title: title,
+            description: description,
+            link: link,
+            subdomain: subdomain,
+            show_amounts: showAmounts ? "yes" : "no",
+            name: name,
+            email: email,
+            phone: phone,
+            plaid_connected: false,
+          });
         } else {
           handleFailure();
         }
@@ -167,9 +191,53 @@ const UserInfo = ({ advanceStep, setUserId, editId, editDetails }) => {
       });
   };
 
+  const subdomain_link = `https://${editDetails.subdomain}.withlaguna.com`;
+
   return (
     <>
       <Typography variant="h4">Account creation and configuration</Typography>
+      {add_plaid && (
+        <div
+          style={{
+            padding: theme.spacing(4),
+          }}
+        >
+          <Alert severity="error">
+            Your page is live, but your brokerage hasn't been connected yet
+          </Alert>
+          <Button
+            style={{
+              backgroundImage:
+                "linear-gradient(to top right, #A01A7D, #EC4067)",
+              color: "white",
+            }}
+            onClick={advanceStep}
+          >
+            Import your trades
+          </Button>
+        </div>
+      )}
+            {refresh && (
+        <div
+          style={{
+            padding: theme.spacing(4),
+          }}
+        >
+          <Alert severity="warning">
+            Your brokerage credentials have expired. Please re-log them
+          </Alert>
+          <Button
+            style={{
+              backgroundImage:
+                "linear-gradient(to top right, #A01A7D, #EC4067)",
+              color: "white",
+            }}
+            onClick={advanceStep}
+          >
+            Reconnect
+          </Button>
+        </div>
+      )}
       <form>
         <Paper
           style={{ padding: theme.spacing(6), marginBottom: theme.spacing(2) }}
@@ -289,21 +357,37 @@ const UserInfo = ({ advanceStep, setUserId, editId, editDetails }) => {
             Something went wrong :(. Please double check your information
           </Typography>
         )}
-        <Button
+        <div
           style={{
-            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
-            color: "white",
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-around",
+            alignItems: "center",
           }}
-          onClick={handleSubmit}
         >
-          Submit Information
-        </Button>
+          {!!editDetails.subdomain && (
+            <div>
+              <Typography>Check out your page: </Typography>
+              <Link href={subdomain_link}>{subdomain_link}</Link>
+            </div>
+          )}
+          <Button
+            style={{
+              backgroundImage:
+                "linear-gradient(to top right, #A01A7D, #EC4067)",
+              color: "white",
+            }}
+            onClick={handleSubmit}
+          >
+            {!!editId ? "Update" : "Submit"} Information
+          </Button>
+        </div>
       </form>
     </>
   );
 };
 
-const PlaidInfo = ({ advanceStep, userId, refresh }) => {
+const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const [token, setToken] = useState("");
   const [error, setError] = useState(false);
   const theme = useTheme();
@@ -431,6 +515,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh }) => {
 
   return (
     <>
+      <Typography variant="h5">{title}</Typography>
       <Typography variant="h4">Connect your investment brokerage</Typography>
       <Typography>
         Your portfolio is automatically monitored, and trades are immediately
@@ -514,7 +599,7 @@ const Wait = () => {
       </Typography>
     </>
   );
-};
+}
 
 const Update = () => {
   const { width, height } = useWindowSize();
@@ -549,6 +634,7 @@ export const AccessForm = () => {
     name: "",
     email: "",
     phone: "",
+    plaid_connected: false,
   });
   const theme = useTheme();
 
@@ -558,15 +644,15 @@ export const AccessForm = () => {
     let params = new URLSearchParams(search);
     let plaid_refresh_id = params.get("plaid_refresh");
     if (!!plaid_refresh_id) {
-      setStep(2);
+      setStep(1);
       setRefresh(true);
-      setUserId(plaid_refresh_id);
+      // setUserId(plaid_refresh_id);
     }
-    let plaid_login_id = params.get("plaid_login");
-    if (!!plaid_login_id) {
-      setStep(2);
-      setUserId(plaid_login_id);
-    }
+    // let plaid_login_id = params.get("plaid_login");
+    // if (!!plaid_login_id) {
+    //   setStep(2);
+    //   setUserId(plaid_login_id);
+    // }
     let edit_id = params.get("edit");
     if (!!edit_id) {
       setStep(1);
@@ -576,13 +662,12 @@ export const AccessForm = () => {
       axios
         .get(`https://api.withlaguna.com/stonks/access/edit_info`, {
           params: {
-            edit: edit_id,
+            edit_id: edit_id,
           },
         })
         .then((res) => {
           let editable = Object.assign({}, res.data);
           editable.show_amounts = !!editable.show_amounts ? "yes" : "no";
-          console.log(editable);
           setEditDetails(editable);
         })
         .catch((err) => {
@@ -596,10 +681,12 @@ export const AccessForm = () => {
     else if (step === 1)
       return (
         <UserInfo
-          advanceStep={() => (!!editId ? setStep(4) : setStep(2))}
+          advanceStep={() => (editDetails.plaid_connected ? "" : setStep(2))}
           setUserId={setUserId}
+          refresh={refresh}
           editId={editId}
           editDetails={editDetails}
+          setEditDetails={setEditDetails}
         />
       );
     else if (step === 2)
