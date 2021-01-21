@@ -131,7 +131,7 @@ const UserInfo = ({
     setShowAmounts(editDetails.show_amounts);
 
     //
-    if (!!edit_id) {
+    if (!!editId) {
       axios
         .post(`${BASE_DOMAIN}/stonks/access/exchange`, { edit_id: editId })
         .then((res) => {
@@ -674,7 +674,7 @@ const Update = () => {
 
 export const AccessForm = () => {
   // Ignore Access Code
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [refresh, setRefresh] = useState(false);
   const [userId, setUserId] = useState(1);
   const [editId, setEditId] = useState();
