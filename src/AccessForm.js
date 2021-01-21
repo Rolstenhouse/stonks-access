@@ -118,6 +118,7 @@ const UserInfo = ({
   const [email, setEmail] = useState(editDetails.email);
   const [phone, setPhone] = useState(editDetails.phone);
   const [showAmounts, setShowAmounts] = useState(editDetails.show_amounts);
+  const [userId, setDangerousUserId] = useState("");
 
   useEffect(() => {
     setTitle(editDetails.title);
@@ -128,6 +129,15 @@ const UserInfo = ({
     setEmail(editDetails.email);
     setPhone(editDetails.phone);
     setShowAmounts(editDetails.show_amounts);
+
+    //
+    if (!!edit_id) {
+      axios
+        .post(`${BASE_DOMAIN}/stonks/access/exchange`, { edit_id: editId })
+        .then((res) => {
+          setDangerousUserId(res.data.user);
+        });
+    }
   }, [editDetails]);
 
   const add_plaid = editDetails.plaid_connected != !!editDetails.subdomain;
@@ -386,6 +396,12 @@ const UserInfo = ({
           </Button>
         </div>
       </form>
+      {!!userId && (
+        <>
+          <Typography variant="h4">Manual trades</Typography>
+          <EnterTradesTable userId={userId} />
+        </>
+      )}
     </>
   );
 };
