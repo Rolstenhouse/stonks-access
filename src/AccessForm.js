@@ -6,7 +6,7 @@ import { Lock } from "@material-ui/icons";
 import { useTheme } from "@material-ui/core/styles";
 import useWindowSize from "react-use/lib/useWindowSize";
 import Confetti from "react-confetti";
-
+import { EnterTradesTable } from "./EnterTradesTable";
 /*********
  * 3 Steps:
  * 1) Check Access Code
@@ -32,6 +32,9 @@ import {
 
 import { Alert } from "@material-ui/lab";
 
+let BASE_DOMAIN = `https://api.withlaguna.com`;
+if (process.env.NODE_ENV === "development") BASE_DOMAIN = "http://0.0.0.0:5000";
+
 const AccessCode = ({ advanceStep }) => {
   const [input, setInput] = useState("");
   const [error, setError] = useState(false);
@@ -44,7 +47,7 @@ const AccessCode = ({ advanceStep }) => {
   const handleSubmit = (e) => {
     setError(false);
     axios
-      .get(`https://api.withlaguna.com/stonks/access/code/${input}`)
+      .get(`${BASE_DOMAIN}/stonks/access/code/${input}`)
       .then((res) => {
         if (res.data.allow) {
           advanceStep();
@@ -98,7 +101,7 @@ const UserInfo = ({
   editId,
   editDetails,
   setEditDetails,
-  refresh
+  refresh,
 }) => {
   const theme = useTheme();
   const [error, setError] = useState(false);
@@ -115,6 +118,7 @@ const UserInfo = ({
   const [email, setEmail] = useState(editDetails.email);
   const [phone, setPhone] = useState(editDetails.phone);
   const [showAmounts, setShowAmounts] = useState(editDetails.show_amounts);
+  const [userId, setDangerousUserId] = useState("");
 
   useEffect(() => {
     setTitle(editDetails.title);
@@ -125,14 +129,24 @@ const UserInfo = ({
     setEmail(editDetails.email);
     setPhone(editDetails.phone);
     setShowAmounts(editDetails.show_amounts);
+
+    //
+    if (!!editId) {
+      axios
+        .post(`${BASE_DOMAIN}/stonks/access/exchange`, { edit_id: editId })
+        .then((res) => {
+          setDangerousUserId(res.data.user);
+        });
+    }
   }, [editDetails]);
 
   const add_plaid = editDetails.plaid_connected != !!editDetails.subdomain;
 
+  // TODO: avoid resubmitting every time here, and just get the user associated
   const handleSubmit = (e) => {
     setError(false);
     axios
-      .post(`https://api.withlaguna.com/stonks/access/form`, {
+      .post(`${BASE_DOMAIN}/stonks/access/form`, {
         title: title,
         description: description,
         link: link,
@@ -146,8 +160,6 @@ const UserInfo = ({
       .then((res) => {
         if (res.data.allow) {
           setUserId(res.data.id);
-          advanceStep();
-
           // Update details via callback?
           setEditDetails({
             title: title,
@@ -158,8 +170,9 @@ const UserInfo = ({
             name: name,
             email: email,
             phone: phone,
-            plaid_connected: false,
+            plaid_connected: editDetails.plaid_connected,
           });
+          advanceStep();
         } else {
           handleFailure();
         }
@@ -179,7 +192,7 @@ const UserInfo = ({
       else if (body.phone && body.phone === editDetails.phone) return;
     }
     axios
-      .get(`https://api.withlaguna.com/stonks/access/check_unique`, {
+      .get(`${BASE_DOMAIN}/stonks/access/check_unique`, {
         params: body,
       })
       .then((res) => {})
@@ -211,13 +224,13 @@ const UserInfo = ({
                 "linear-gradient(to top right, #A01A7D, #EC4067)",
               color: "white",
             }}
-            onClick={advanceStep}
+            onClick={handleSubmit}
           >
             Import your trades
           </Button>
         </div>
       )}
-            {refresh && (
+      {refresh && (
         <div
           style={{
             padding: theme.spacing(4),
@@ -232,7 +245,7 @@ const UserInfo = ({
                 "linear-gradient(to top right, #A01A7D, #EC4067)",
               color: "white",
             }}
-            onClick={advanceStep}
+            onClick={handleSubmit}
           >
             Reconnect
           </Button>
@@ -383,15 +396,17 @@ const UserInfo = ({
           </Button>
         </div>
       </form>
+      {!!userId && (
+        <>
+          <Typography variant="h4">Manual trades</Typography>
+          <EnterTradesTable userId={userId} />
+        </>
+      )}
     </>
   );
 };
 
-const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
-  const [token, setToken] = useState("");
-  const [error, setError] = useState(false);
-  const theme = useTheme();
-
+const CSVUpload = ({ userId, advanceStep }) => {
   const [showUpload, setShowUpload] = useState(false);
   const [presignedPost, setPresignedPost] = useState({});
   const [uploading, setUploading] = useState(false);
@@ -400,57 +415,6 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
     raw: "",
     name: "",
   });
-
-  useEffect(() => {
-    axios
-      .get(`https://api.withlaguna.com/stonks/access/plaid_token/${userId}`, {
-        params: {
-          refresh: refresh,
-        },
-      })
-      .then((res) => {
-        if (res.data.link_token) {
-          setToken(res.data.link_token);
-        } else {
-          handleFailure();
-        }
-      })
-      .catch(() => {
-        handleFailure();
-      });
-  }, []);
-
-  const handleFailure = () => {
-    setError(true);
-  };
-
-  const onSuccess = useCallback((token, metadata) => {
-    // when refreshing no need to post any new data
-    if (refresh) {
-      advanceStep();
-      return;
-    }
-    axios
-      .post(`https://api.withlaguna.com/stonks/access/plaid/${userId}`, {
-        token: token,
-        metadata: metadata,
-      })
-      .then((res) => {
-        if (res.data.allow) {
-          advanceStep();
-        } else {
-          handleFailure();
-        }
-      });
-  });
-
-  const config = {
-    token: token,
-    onSuccess,
-  };
-
-  const { open, ready, plaidError } = usePlaidLink(config);
-
   const handleChange = (e) => {
     if (e.target.files.length) {
       let name = e.target.value.split("\\").pop();
@@ -466,7 +430,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const getSignedUrl = (name) => {
     let fileName = name.replace(/[^\w\d_\-.]+/gi, "");
     axios
-      .get(`https://api.withlaguna.com/stonks/access/sign/${userId}`, {
+      .get(`${BASE_DOMAIN}/stonks/access/sign/${userId}`, {
         params: { file_name: fileName },
       })
       .then((res) => {
@@ -515,11 +479,99 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
 
   return (
     <>
+      {!uploadFile.preview ? (
+        <Button
+          component="label"
+          style={{ color: "linear-gradient(to top right, #A01A7D, #EC4067)" }}
+        >
+          Manually upload trades(CSV)
+          <input type="file" hidden onChange={handleChange} />
+        </Button>
+      ) : uploading ? (
+        <CircularProgress />
+      ) : (
+        <Button
+          style={{
+            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
+            color: "white",
+            fontWeight: 800,
+          }}
+          onClick={handleUpload}
+        >
+          Upload {uploadFile.name}
+        </Button>
+      )}
+    </>
+  );
+};
+
+const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
+  const [token, setToken] = useState("");
+  const [error, setError] = useState(false);
+  const [showTable, setShowTable] = useState(false);
+  const theme = useTheme();
+
+  useEffect(() => {
+    axios
+      .get(`${BASE_DOMAIN}/stonks/access/plaid_token/${userId}`, {
+        params: {
+          refresh: refresh,
+        },
+      })
+      .then((res) => {
+        if (res.data.link_token) {
+          setToken(res.data.link_token);
+        } else {
+          handleFailure();
+        }
+      })
+      .catch(() => {
+        handleFailure();
+      });
+  }, []);
+
+  const handleFailure = () => {
+    setError(true);
+  };
+
+  const onSuccess = useCallback((token, metadata) => {
+    // when refreshing no need to post any new data
+    if (refresh) {
+      advanceStep();
+      return;
+    }
+    axios
+      .post(`${BASE_DOMAIN}/stonks/access/plaid/${userId}`, {
+        token: token,
+        metadata: metadata,
+      })
+      .then((res) => {
+        if (res.data.allow) {
+          advanceStep();
+        } else {
+          handleFailure();
+        }
+      });
+  });
+
+  const config = {
+    token: token,
+    onSuccess,
+  };
+
+  const { open, ready, plaidError } = usePlaidLink(config);
+
+  const handleManualEntry = () => {
+    setShowTable(true);
+  };
+
+  return (
+    <>
       <Typography variant="h5">{title}</Typography>
       <Typography variant="h4">Connect your investment brokerage</Typography>
       <Typography>
         Your portfolio is automatically monitored, and trades are immediately
-        updated using Plaid, the standard in banking connections.
+        updated using Plaid, the standard in brokerage connections.
       </Typography>
       <Typography variant="caption">Only read access is allowed</Typography>
       {(error || plaidError) && (
@@ -541,9 +593,8 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
             backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
             color: "white",
           }}
-          disabled={!!uploadFile.preview}
         >
-          Connect bank account
+          Connect brokerage with Plaid
         </Button>
         <div
           style={{
@@ -553,30 +604,33 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
         >
           or
         </div>
-        {!uploadFile.preview ? (
-          <Button
-            component="label"
-            style={{ color: "linear-gradient(to top right, #A01A7D, #EC4067)" }}
-          >
-            Manually upload trades(CSV)
-            <input type="file" hidden onChange={handleChange} />
-          </Button>
-        ) : uploading ? (
-          <CircularProgress />
-        ) : (
-          <Button
-            style={{
-              backgroundImage:
-                "linear-gradient(to top right, #A01A7D, #EC4067)",
-              color: "white",
-              fontWeight: 800,
-            }}
-            onClick={handleUpload}
-          >
-            Upload {uploadFile.name}
-          </Button>
-        )}
+        <Button
+          component="label"
+          style={{ color: "linear-gradient(to top right, #A01A7D, #EC4067)" }}
+          onClick={handleManualEntry}
+        >
+          Enter trades manually
+        </Button>
       </div>
+      <>
+        {showTable && (
+          <>
+            <EnterTradesTable userId={userId} />
+            <Button
+              onClick={() => {
+                advanceStep();
+              }}
+              style={{
+                backgroundImage:
+                  "linear-gradient(to top right, #729FBF, #E0CDE1)",
+                color: "white",
+              }}
+            >
+              CONTINUE
+            </Button>
+          </>
+        )}
+      </>
     </>
   );
 };
@@ -599,11 +653,10 @@ const Wait = () => {
       </Typography>
     </>
   );
-}
+};
 
 const Update = () => {
   const { width, height } = useWindowSize();
-
   return (
     <>
       <Confetti width={width} height={height} />
@@ -623,8 +676,9 @@ export const AccessForm = () => {
   // Ignore Access Code
   const [step, setStep] = useState(1);
   const [refresh, setRefresh] = useState(false);
-  const [userId, setUserId] = useState();
+  const [userId, setUserId] = useState(1);
   const [editId, setEditId] = useState();
+  const [err, setErr] = useState(false);
   const [editDetails, setEditDetails] = useState({
     title: "",
     description: "",
@@ -660,7 +714,7 @@ export const AccessForm = () => {
 
       // fetch initial props
       axios
-        .get(`https://api.withlaguna.com/stonks/access/edit_info`, {
+        .get(`${BASE_DOMAIN}/stonks/access/edit_info`, {
           params: {
             edit_id: edit_id,
           },
@@ -672,34 +726,40 @@ export const AccessForm = () => {
         })
         .catch((err) => {
           console.log(err);
+          setErr(true);
         });
     }
   }, []);
 
   function renderStep() {
-    if (step === 0) return <AccessCode advanceStep={() => setStep(1)} />;
-    else if (step === 1)
-      return (
-        <UserInfo
-          advanceStep={() => (editDetails.plaid_connected ? "" : setStep(2))}
-          setUserId={setUserId}
-          refresh={refresh}
-          editId={editId}
-          editDetails={editDetails}
-          setEditDetails={setEditDetails}
-        />
-      );
-    else if (step === 2)
-      return (
-        <PlaidInfo
-          userId={userId}
-          advanceStep={() => setStep(3)}
-          refresh={refresh}
-        />
-      );
-    else if (step === 3) return <Wait />;
-    else if (step === 4) return <Update />;
-    else return <></>;
+    if (err) {
+      return <div>Something went wrong with laguna</div>;
+    } else {
+      if (step === 0) return <AccessCode advanceStep={() => setStep(1)} />;
+      else if (step === 1)
+        return (
+          <UserInfo
+            advanceStep={() => (editDetails.plaid_connected ? "" : setStep(2))}
+            setUserId={setUserId}
+            refresh={refresh}
+            editId={editId}
+            editDetails={editDetails}
+            setEditDetails={setEditDetails}
+          />
+        );
+      else if (step === 2)
+        return (
+          <PlaidInfo
+            userId={userId}
+            advanceStep={() => setStep(3)}
+            refresh={refresh}
+            title={editDetails.title}
+          />
+        );
+      else if (step === 3) return <Wait />;
+      else if (step === 4) return <Update />;
+      else return <></>;
+    }
   }
 
   return (
