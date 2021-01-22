@@ -510,6 +510,14 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const [error, setError] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const theme = useTheme();
+  
+  const [plaidStatus, setPlaidStatus] = useState([])
+
+  const getPlaidStatus = () => {
+    axios.get(`${BASE_DOMAIN}/stonks/access/plaid_token`).then((res) => {
+      setPlaidStatus(res.data.plaid);
+    });
+  };
 
   useEffect(() => {
     axios
@@ -528,6 +536,8 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       .catch(() => {
         handleFailure();
       });
+
+    getPlaidStatus();
   }, []);
 
   const handleFailure = () => {
@@ -674,9 +684,9 @@ const Update = () => {
 
 export const AccessForm = () => {
   // Ignore Access Code
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
   const [refresh, setRefresh] = useState(false);
-  const [userId, setUserId] = useState(1);
+  const [userId, setUserId] = useState();
   const [editId, setEditId] = useState();
   const [err, setErr] = useState(false);
   const [editDetails, setEditDetails] = useState({
