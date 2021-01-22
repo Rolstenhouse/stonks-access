@@ -510,13 +510,16 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const [error, setError] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const theme = useTheme();
-  
-  const [plaidStatus, setPlaidStatus] = useState([])
+
+  const [plaidStatus, setPlaidStatus] = useState([]);
 
   const getPlaidStatus = () => {
-    axios.get(`${BASE_DOMAIN}/stonks/access/plaid_token`).then((res) => {
-      setPlaidStatus(res.data.plaid);
-    });
+    // ALWAYS GET PLAID STATUS FROM THE API
+    axios
+      .get(`https://api.withlaguna.com/stonks/access/plaid_status`)
+      .then((res) => {
+        setPlaidStatus(res.data?.brokers || []);
+      });
   };
 
   useEffect(() => {
@@ -592,20 +595,34 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
           display: "flex",
           justifyContent: "center",
           marginTop: theme.spacing(2),
-          alignItems: "center",
+          alignItems: "flex-start",
         }}
       >
-        <Button
-          onClick={() => {
-            open();
-          }}
+        <div
           style={{
-            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
-            color: "white",
+            display: "flex",
+            flexDirection: "column",
+            maxWidth: "300px",
           }}
         >
-          Connect brokerage with Plaid
-        </Button>
+          <Button
+            onClick={() => {
+              open();
+            }}
+            style={{
+              backgroundImage:
+                "linear-gradient(to top right, #A01A7D, #EC4067)",
+              color: "white",
+            }}
+          >
+            (<b>Auto</b>) Connect brokerage
+          </Button>
+          {plaidStatus.map((status) => (
+            <Alert style={{ marginTop: theme.spacing(2) }} severity="warning">
+              {status}
+            </Alert>
+          ))}
+        </div>
         <div
           style={{
             marginLeft: theme.spacing(2),
@@ -616,10 +633,13 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
         </div>
         <Button
           component="label"
-          style={{ color: "linear-gradient(to top right, #A01A7D, #EC4067)" }}
+          style={{
+            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
+            color: "white",
+          }}
           onClick={handleManualEntry}
         >
-          Enter trades manually
+          (<b>Manual</b>) Enter trades
         </Button>
       </div>
       <>
