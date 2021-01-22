@@ -595,10 +595,16 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
           display: "flex",
           justifyContent: "center",
           marginTop: theme.spacing(2),
-          alignItems: "center",
+          alignItems: "flex-start",
         }}
       >
-        <div>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            maxWidth: "300px",
+          }}
+        >
           <Button
             onClick={() => {
               open();
@@ -609,10 +615,12 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
               color: "white",
             }}
           >
-            Connect brokerage with Plaid
+            (<b>Auto</b>) Connect brokerage
           </Button>
           {plaidStatus.map((status) => (
-            <Alert severity="warning">{status}</Alert>
+            <Alert style={{ marginTop: theme.spacing(2) }} severity="warning">
+              {status}
+            </Alert>
           ))}
         </div>
         <div
@@ -625,10 +633,13 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
         </div>
         <Button
           component="label"
-          style={{ color: "linear-gradient(to top right, #A01A7D, #EC4067)" }}
+          style={{
+            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
+            color: "white",
+          }}
           onClick={handleManualEntry}
         >
-          Enter trades manually
+          (<b>Manual</b>) Enter trades
         </Button>
       </div>
       <>
@@ -693,7 +704,7 @@ const Update = () => {
 
 export const AccessForm = () => {
   // Ignore Access Code
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [refresh, setRefresh] = useState(false);
   const [userId, setUserId] = useState();
   const [editId, setEditId] = useState();
