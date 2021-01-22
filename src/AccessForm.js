@@ -510,13 +510,16 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const [error, setError] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const theme = useTheme();
-  
-  const [plaidStatus, setPlaidStatus] = useState([])
+
+  const [plaidStatus, setPlaidStatus] = useState([]);
 
   const getPlaidStatus = () => {
-    axios.get(`${BASE_DOMAIN}/stonks/access/plaid_token`).then((res) => {
-      setPlaidStatus(res.data.plaid);
-    });
+    // ALWAYS GET PLAID STATUS FROM THE API
+    axios
+      .get(`https://api.withlaguna.com/stonks/access/plaid_status`)
+      .then((res) => {
+        setPlaidStatus(res.data?.brokers || []);
+      });
   };
 
   useEffect(() => {
@@ -595,17 +598,23 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
           alignItems: "center",
         }}
       >
-        <Button
-          onClick={() => {
-            open();
-          }}
-          style={{
-            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
-            color: "white",
-          }}
-        >
-          Connect brokerage with Plaid
-        </Button>
+        <div>
+          <Button
+            onClick={() => {
+              open();
+            }}
+            style={{
+              backgroundImage:
+                "linear-gradient(to top right, #A01A7D, #EC4067)",
+              color: "white",
+            }}
+          >
+            Connect brokerage with Plaid
+          </Button>
+          {plaidStatus.map((status) => (
+            <Alert severity="warning">{status}</Alert>
+          ))}
+        </div>
         <div
           style={{
             marginLeft: theme.spacing(2),
@@ -684,7 +693,7 @@ const Update = () => {
 
 export const AccessForm = () => {
   // Ignore Access Code
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
   const [refresh, setRefresh] = useState(false);
   const [userId, setUserId] = useState();
   const [editId, setEditId] = useState();
