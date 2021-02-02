@@ -471,7 +471,7 @@ const CSVUpload = ({ userId, advanceStep }) => {
     axios
       .post(`${presignedPost.url}`, formData, config)
       .then((res) => {
-        advanceStep();
+        advanceStep(3);
       })
       .catch(console.error("Uploading problemo"))
       .finally(setUploading(false));
@@ -495,7 +495,7 @@ const CSVUpload = ({ userId, advanceStep }) => {
               color: "white",
             }}
           >
-            <b style={{marginRight: "4px"}}>EASIEST</b> Upload a screenshot of your positions
+            Upload a screenshot of your positions
             <input type="file" hidden onChange={handleChange} />
           </Button>
           <Typography variant="caption">
@@ -565,7 +565,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const onSuccess = useCallback((token, metadata) => {
     // when refreshing no need to post any new data
     if (refresh) {
-      advanceStep();
+      advanceStep(3);
       return;
     }
     axios
@@ -575,7 +575,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       })
       .then((res) => {
         if (res.data.allow) {
-          advanceStep();
+          advanceStep(3);
         } else {
           handleFailure();
         }
@@ -591,6 +591,10 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
 
   const handleManualEntry = () => {
     setShowTable(true);
+  };
+
+  const handleFileUpload = () => {
+    advanceStep(5);
   };
 
   return (
@@ -631,7 +635,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
               color: "white",
             }}
           >
-            <b style={{marginRight: "4px"}}>Auto</b> Connect brokerage
+            <b style={{ marginRight: "4px" }}>Auto</b> Connect brokerage
           </Button>
           {plaidStatus.map((status) => (
             <Alert style={{ marginTop: theme.spacing(2) }} severity="warning">
@@ -650,14 +654,18 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
         <Button
           component="label"
           style={{
-            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
+            backgroundImage: "linear-gradient(to top right, #bd5fa4, #f27995)",
             color: "white",
           }}
-          onClick={handleManualEntry}
+          onClick={handleFileUpload}
         >
-          <b style={{marginRight: "4px"}}>Manual
-            </b> Enter trades
+          <b style={{ marginRight: "4px" }}>EASIEST</b> Upload a screenshot of
+          your positions
         </Button>
+        <Typography variant="caption">
+          We'll automatically process the data for you
+        </Typography>
+        {/* <CSVUpload userId={userId} advanceStep={advanceStep} /> */}
         <div
           style={{
             marginLeft: theme.spacing(2),
@@ -666,7 +674,16 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
         >
           or
         </div>
-        <CSVUpload userId={userId} advanceStep={advanceStep} />
+        <Button
+          component="label"
+          style={{
+            backgroundImage: "linear-gradient(to top right, #bd5fa4, #f27995)",
+            color: "white",
+          }}
+          onClick={handleManualEntry}
+        >
+          <b style={{ marginRight: "4px" }}>Manual</b> Enter trades
+        </Button>
       </div>
 
       <>
@@ -721,6 +738,15 @@ const Update = () => {
       <Typography variant="caption">
         Feedback? Email team@withlaguna.com
       </Typography>
+    </>
+  );
+};
+
+const InstructiveFileUpload = ({ userId, advanceStep }) => {
+  return (
+    <>
+      <img width="800px" src="/upload_robinhood.png" />
+      <CSVUpload userId={userId} advanceStep={advanceStep} />
     </>
   );
 };
@@ -808,13 +834,14 @@ export const AccessForm = () => {
         return (
           <PlaidInfo
             userId={userId}
-            advanceStep={() => setStep(3)}
+            advanceStep={setStep}
             refresh={refresh}
             title={editDetails.title}
           />
         );
       else if (step === 3) return <Wait />;
       else if (step === 4) return <Update />;
+      else if (step === 5) return <InstructiveFileUpload userId={userId} advanceStep={setStep} />;
       else return <></>;
     }
   }
