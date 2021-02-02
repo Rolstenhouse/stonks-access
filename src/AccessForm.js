@@ -480,19 +480,34 @@ const CSVUpload = ({ userId, advanceStep }) => {
   return (
     <>
       {!uploadFile.preview ? (
-        <Button
-          component="label"
-          style={{ color: "linear-gradient(to top right, #A01A7D, #EC4067)" }}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
         >
-          Manually upload trades(CSV)
-          <input type="file" hidden onChange={handleChange} />
-        </Button>
+          <Button
+            component="label"
+            style={{
+              backgroundImage:
+                "linear-gradient(to top right, #A01A7D, #EC4067)",
+              color: "white",
+            }}
+          >
+            <b style={{marginRight: "4px"}}>EASIEST</b> Upload a screenshot of your positions
+            <input type="file" hidden onChange={handleChange} />
+          </Button>
+          <Typography variant="caption">
+            We'll automatically process the data for you
+          </Typography>
+        </div>
       ) : uploading ? (
         <CircularProgress />
       ) : (
         <Button
           style={{
-            backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
+            backgroundImage: "linear-gradient(to top right, #669bbc, #ecd1e5)",
             color: "white",
             fontWeight: 800,
           }}
@@ -594,15 +609,16 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
         style={{
           display: "flex",
           justifyContent: "center",
+          alignItems: "center",
           marginTop: theme.spacing(2),
-          alignItems: "flex-start",
+          flexDirection: "column",
         }}
       >
         <div
           style={{
             display: "flex",
             flexDirection: "column",
-            maxWidth: "300px",
+            maxWidth: "400px",
           }}
         >
           <Button
@@ -615,7 +631,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
               color: "white",
             }}
           >
-            (<b>Auto</b>) Connect brokerage
+            <b style={{marginRight: "4px"}}>Auto</b> Connect brokerage
           </Button>
           {plaidStatus.map((status) => (
             <Alert style={{ marginTop: theme.spacing(2) }} severity="warning">
@@ -639,9 +655,20 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
           }}
           onClick={handleManualEntry}
         >
-          (<b>Manual</b>) Enter trades
+          <b style={{marginRight: "4px"}}>Manual
+            </b> Enter trades
         </Button>
+        <div
+          style={{
+            marginLeft: theme.spacing(2),
+            marginRight: theme.spacing(2),
+          }}
+        >
+          or
+        </div>
+        <CSVUpload userId={userId} advanceStep={advanceStep} />
       </div>
+
       <>
         {showTable && (
           <>
