@@ -525,6 +525,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const [error, setError] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const theme = useTheme();
+  const [enableContinue, setEnableContunue] = useState("disabled");
 
   const [plaidStatus, setPlaidStatus] = useState([]);
 
@@ -689,7 +690,8 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       <>
         {showTable && (
           <>
-            <EnterTradesTable userId={userId} />
+            <EnterTradesTable userId={userId} enableContinue={setEnableContunue} />
+            
             <Button
               onClick={() => {
                 advanceStep();
@@ -699,6 +701,8 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
                   "linear-gradient(to top right, #729FBF, #E0CDE1)",
                 color: "white",
               }}
+              disabled={enableContinue}
+           
             >
               CONTINUE
             </Button>
@@ -757,9 +761,9 @@ const InstructiveFileUpload = ({ userId, advanceStep }) => {
 
 export const AccessForm = () => {
   // Ignore Access Code
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
   const [refresh, setRefresh] = useState(false);
-  const [userId, setUserId] = useState();
+  const [userId, setUserId] = useState(1);
   const [editId, setEditId] = useState();
   const [err, setErr] = useState(false);
   const [editDetails, setEditDetails] = useState({
