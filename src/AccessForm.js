@@ -472,6 +472,12 @@ const CSVUpload = ({ userId, advanceStep }) => {
       .post(`${presignedPost.url}`, formData, config)
       .then((res) => {
         advanceStep(3);
+        axios
+          .get(`${BASE_DOMAIN}/stonks/access/uploaded/${userId}`)
+          .then((res) => {
+            console.log(res);
+          })
+          .catch(console.error("Did not set manual trade issue"));
       })
       .catch(console.error("Uploading problemo"))
       .finally(setUploading(false));
@@ -841,7 +847,8 @@ export const AccessForm = () => {
         );
       else if (step === 3) return <Wait />;
       else if (step === 4) return <Update />;
-      else if (step === 5) return <InstructiveFileUpload userId={userId} advanceStep={setStep} />;
+      else if (step === 5)
+        return <InstructiveFileUpload userId={userId} advanceStep={setStep} />;
       else return <></>;
     }
   }
