@@ -154,34 +154,36 @@ export const EnterTradesTable = ({ userId, enableContinue}) => {
   const [trades, setTrades] = useState([]);
   const theme = useTheme();
 
- 
-
-  useEffect(() => {
-    console.log('useEffect trade len: ' + trades.length)
-    if (trades.length > 0) {
-      enableContinue(null)
-
-    } else{
-      enableContinue("disabled")
-
-    }
-  })
-
-  useEffect(() => {
+useEffect(() => {
     // set trades from BE that were manually entered
     axios.get(`${BASE_DOMAIN}/stonks/access/trades/${userId}`).then((res) => {
       if (res.data.allow) {
         console.log('trades loaded: ' + res.data.trades.length)
         setTrades(res.data.trades);
+        
+        if (res.data.trades.length > 0) {
+          enableContinue(true)
+          
+        } else{
+          enableContinue(false)
+        }
       }
     });
   }, []);
 
 
 
-  const onSubmit = (editTrades) => {
+  const onSubmit = (editTrade) => {
     // some logic to insert a trade here
-    setTrades([...trades, editTrades]);
+    var tmp = [...trades, editTrade]
+    setTrades(tmp);
+    if (tmp.length > 0) {
+      enableContinue(true)
+
+    } else{
+      enableContinue(false)
+    }
+    
   };
 
   // Add new trade row

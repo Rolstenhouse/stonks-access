@@ -399,7 +399,7 @@ const UserInfo = ({
       {!!userId && (
         <>
           <Typography variant="h4">Manual trades</Typography>
-          <EnterTradesTable userId={userId} />
+          <EnterTradesTable userId={userId} enableContinue={() => {}} />
         </>
       )}
     </>
@@ -525,7 +525,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const [error, setError] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const theme = useTheme();
-  const [enableContinue, setEnableContunue] = useState("disabled");
+  const [enableContinue, setEnableContinue] = useState(false);
 
   const [plaidStatus, setPlaidStatus] = useState([]);
 
@@ -690,7 +690,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       <>
         {showTable && (
           <>
-            <EnterTradesTable userId={userId} enableContinue={setEnableContunue} />
+            <EnterTradesTable userId={userId} enableContinue={setEnableContinue} />
             
             <Button
               onClick={() => {
@@ -701,7 +701,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
                   "linear-gradient(to top right, #729FBF, #E0CDE1)",
                 color: "white",
               }}
-              disabled={enableContinue}
+              disabled={enableContinue ? null : 'disable'}
            
             >
               CONTINUE
@@ -761,9 +761,9 @@ const InstructiveFileUpload = ({ userId, advanceStep }) => {
 
 export const AccessForm = () => {
   // Ignore Access Code
-  const [step, setStep] = useState(2);
+  const [step, setStep] = useState(1);
   const [refresh, setRefresh] = useState(false);
-  const [userId, setUserId] = useState(1);
+  const [userId, setUserId] = useState(0);
   const [editId, setEditId] = useState();
   const [err, setErr] = useState(false);
   const [editDetails, setEditDetails] = useState({
