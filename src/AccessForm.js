@@ -828,7 +828,7 @@ export const AccessForm = () => {
       else if (step === 1)
         return (
           <UserInfo
-            advanceStep={() => (editDetails.plaid_connected ? "" : setStep(2))}
+            advanceStep={() => (editDetails.plaid_connected && !refresh ? "" : setStep(2))}
             setUserId={setUserId}
             refresh={refresh}
             editId={editId}
