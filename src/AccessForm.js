@@ -8,7 +8,7 @@ import useWindowSize from "react-use/lib/useWindowSize";
 import Confetti from "react-confetti";
 import { EnterTradesTable } from "./EnterTradesTable";
 /*********
- * 3 Steps:
+ * 3 Steps:ti
  * 1) Check Access Code
  * 2) Add email (and other information), phone, (not displayed), url to show, subdomain, title, byline
  * 3) Connect plaid
@@ -562,6 +562,9 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       });
 
     getPlaidStatus();
+    if (!title) {
+      setError(true);
+    }
   }, []);
 
   const handleFailure = () => {
@@ -787,19 +790,23 @@ export const AccessForm = () => {
     let params = new URLSearchParams(search);
     let plaid_refresh_id = params.get("plaid_refresh");
     if (!!plaid_refresh_id) {
-      setStep(1);
       setRefresh(true);
       // setUserId(plaid_refresh_id);
     }
-    // let plaid_login_id = params.get("plaid_login");
-    // if (!!plaid_login_id) {
-    //   setStep(2);
-    //   setUserId(plaid_login_id);
-    // }
+    let plaid_login = params.get("plaid_login");
     let edit_id = params.get("edit");
     if (!!edit_id) {
       setStep(1);
       setEditId(edit_id);
+
+      if (!!plaid_login) {
+        axios
+          .post(`${BASE_DOMAIN}/stonks/access/exchange`, { edit_id: edit_id })
+          .then((res) => {
+            setUserId(res.data.user);
+          });
+        setStep(2);
+      }
 
       // fetch initial props
       axios
@@ -828,7 +835,9 @@ export const AccessForm = () => {
       else if (step === 1)
         return (
           <UserInfo
-            advanceStep={() => (editDetails.plaid_connected && !refresh ? "" : setStep(2))}
+            advanceStep={() =>
+              editDetails.plaid_connected && !refresh ? "" : setStep(2)
+            }
             setUserId={setUserId}
             refresh={refresh}
             editId={editId}
