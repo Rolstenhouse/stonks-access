@@ -534,10 +534,6 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
 
   const [plaidStatus, setPlaidStatus] = useState([]);
 
-  if (!title) {
-    setError(true);
-  }
-
   const getPlaidStatus = () => {
     // ALWAYS GET PLAID STATUS FROM THE API
     axios
@@ -616,7 +612,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
         updated using Plaid, the standard in brokerage connections.
       </Typography>
       <Typography variant="caption">Only read access is allowed</Typography>
-      {(error || plaidError) && (
+      {(error || plaidError || !title) && (
         <Typography> Something went wrong :( </Typography>
       )}
       <div
