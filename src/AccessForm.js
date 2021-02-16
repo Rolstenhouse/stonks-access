@@ -534,6 +534,10 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
 
   const [plaidStatus, setPlaidStatus] = useState([]);
 
+  if (!title) {
+    setError(true);
+  }
+
   const getPlaidStatus = () => {
     // ALWAYS GET PLAID STATUS FROM THE API
     axios
@@ -562,9 +566,6 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       });
 
     getPlaidStatus();
-    if (!title) {
-      setError(true);
-    }
   }, []);
 
   const handleFailure = () => {
