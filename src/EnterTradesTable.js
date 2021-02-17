@@ -28,12 +28,6 @@ const trade = {
 };
 
 const formValues = {
-  tradeType: {
-    title: "Trade Type (buy/sell/other)",
-    pl: "buy/sell/other",
-    init: "",
-    required: true,
-  },
   tradeDate: {
     title: "Trade Date (mm/dd/yyyy)",
     pl: "mm/dd/yyyy",
@@ -41,15 +35,14 @@ const formValues = {
     required: true,
   },
   costBasis: {
-    title: "Cost Basis",
+    title: "Cost Basis (Total assets bought)",
+    helperText: "",
     pl: "$10.01",
     init: "",
     required: true,
   },
   quantity: { title: "Quantity", pl: "5", init: "", required: true },
   ticker: { title: "Ticker", pl: "AAPL", init: "", required: true },
-  priceSold: { title: "Sold price", pl: "100.0", init: "" },
-  percentageReturn: { title: "Return Percentage", pl: "305.75%", init: "" },
 };
 
 const NewTradeRow = ({ userId, onSubmit }) => {
@@ -92,10 +85,8 @@ const NewTradeRow = ({ userId, onSubmit }) => {
       return;
     }
 
-    console.log(editTrades);
-
     axios
-      .post(`${BASE_DOMAIN}/stonks/access/insert/${userId}`, editTrades)
+      .post(`${BASE_DOMAIN}/stonks/access/insert/${1}`, editTrades)
       .then((res) => {
         if (res.data.allow) {
           onSubmit(editTrades);
@@ -107,7 +98,20 @@ const NewTradeRow = ({ userId, onSubmit }) => {
       })
       .catch((err) => {
         if (err.response) {
-          setGeneralError(JSON.stringify(err.response.data.err));
+          // check data
+          const err_msg = err.response.data.err;
+          if (!!err_msg?.form) {
+            setErrorTrades(
+              err_msg.form.reduce((res, filter) => {
+                const k = Object.keys(filter)[0];
+                const v = filter[k];
+                res[k] = v;
+                return res;
+              }, {})
+            );
+          } else {
+            setGeneralError(JSON.stringify(err_msg));
+          }
         }
         // something went wrong here
       });
@@ -127,7 +131,9 @@ const NewTradeRow = ({ userId, onSubmit }) => {
               error={!!errorTrades[key]}
               size="tiny"
               fullWidth
-              helperText={value?.helperText}
+              helperText={
+                !!errorTrades[key] ? errorTrades[key] : value?.helperText
+              }
               required={value?.required}
             />
           </TableCell>
@@ -186,13 +192,10 @@ export const EnterTradesTable = ({ userId }) => {
         {trades.map((t) => {
           return (
             <TableRow>
-              <TableCell>{t.tradeType}</TableCell>
               <TableCell>{t.tradeDate}</TableCell>
               <TableCell>{t.costBasis}</TableCell>
               <TableCell>{t.quantity}</TableCell>
               <TableCell>{t.ticker}</TableCell>
-              <TableCell>{t.soldPrice}</TableCell>
-              <TableCell>{t.returnPercentage}</TableCell>
             </TableRow>
           );
         })}

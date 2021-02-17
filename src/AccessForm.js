@@ -763,7 +763,7 @@ const InstructiveFileUpload = ({ userId, advanceStep }) => {
 
 export const AccessForm = () => {
   // Ignore Access Code
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(2);
   const [refresh, setRefresh] = useState(false);
   const [userId, setUserId] = useState();
   const [editId, setEditId] = useState();
