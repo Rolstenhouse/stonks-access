@@ -8,6 +8,7 @@ import useWindowSize from "react-use/lib/useWindowSize";
 import Confetti from "react-confetti";
 import { EnterTradesTable } from "./EnterTradesTable";
 import MaskedInput from "react-text-mask";
+import { Formik, Form, Field } from "formik";
 
 /*********
  * 3 Steps:ti
@@ -29,6 +30,7 @@ import {
   FormControlLabel,
   Radio,
   CircularProgress,
+  LinearProgress,
   Link,
 } from "@material-ui/core";
 
@@ -745,6 +747,7 @@ const Update = () => {
     <>
       <Confetti width={width} height={height} />
       <Typography variant="h4">Thanks for updating your page :)</Typography>
+      <br />
       <Typography variant="caption">
         Feedback? Email team@withlaguna.com
       </Typography>
@@ -764,6 +767,86 @@ const InstructiveFileUpload = ({ userId, advanceStep }) => {
 // const UploadTrades = ({ advanceStep, setShowUpload, userId }) => {
 
 // };
+
+const SignIn = ({}) => {
+  const [success, setSuccess] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const theme = useTheme();
+
+  const handleSubmit = () => {
+    setSubmitting(true);
+    axios
+      .get(`${BASE_DOMAIN}/stonks/access/send`, { params: { email: email } })
+      .then(() => {
+        setSuccess(true);
+      })
+      .catch((err) => {
+        if (err.response) {
+          setError(err.response.data.err);
+        } else {
+          setError("Please email support@withlaguna.com");
+        }
+      })
+      .finally(() => {
+        setSubmitting(false);
+      });
+  };
+
+  return (
+    <div
+      style={{ marginLeft: theme.spacing(12), marginRight: theme.spacing(12) }}
+    >
+      <Typography variant="h5">
+        Enter your email address to get your sign-in link
+      </Typography>
+      <br />
+      <br />
+      {!success && (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <TextField
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            label="Email"
+            error={!!error}
+            helperText={error}
+          />
+          <br />
+          {submitting && <LinearProgress />}
+          <Button
+            component="label"
+            style={{
+              backgroundImage:
+                "linear-gradient(to top right, #A01A7D, #EC4067)",
+              color: "white",
+            }}
+            onClick={handleSubmit}
+          >
+            Submit
+          </Button>
+        </div>
+      )}
+      {!!success && (
+        <Typography varian="body">
+          You've been sent an email. Click it to access your admin page
+        </Typography>
+      )}
+      <br />
+      <br />
+      <Typography variant="caption">
+        Having an issue? <a href="mailto:team@withlaguna.com">Contact us</a>
+      </Typography>
+    </div>
+  );
+};
 
 export const AccessForm = () => {
   // Ignore Access Code
@@ -787,6 +870,11 @@ export const AccessForm = () => {
 
   // IF in refresh mode
   useEffect(() => {
+    let path = window.location.pathname;
+    console.log(path);
+    if (path == "/signin") {
+      setStep(6);
+    }
     let search = window.location.search;
     let params = new URLSearchParams(search);
     let plaid_refresh_id = params.get("plaid_refresh");
@@ -859,6 +947,7 @@ export const AccessForm = () => {
       else if (step === 4) return <Update />;
       else if (step === 5)
         return <InstructiveFileUpload userId={userId} advanceStep={setStep} />;
+      else if (step == 6) return <SignIn />;
       else return <></>;
     }
   }
