@@ -216,7 +216,7 @@ const UserInfo = ({
       {!editId && (
         <>
           <Typography variant="h6">
-            <Link href="/signin">Sign in</Link>
+            <Link href="/#/signin">Sign in</Link>
           </Typography>
         </>
       )}
@@ -877,9 +877,9 @@ export const AccessForm = () => {
 
   // IF in refresh mode
   useEffect(() => {
-    let path = window.location.pathname;
+    let hash = window.location.hash;
     console.log(path);
-    if (path == "/signin") {
+    if (hash == "#/signin") {
       setStep(6);
     }
     let search = window.location.search;
