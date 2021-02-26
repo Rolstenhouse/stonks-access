@@ -7,6 +7,8 @@ import { useTheme } from "@material-ui/core/styles";
 import useWindowSize from "react-use/lib/useWindowSize";
 import Confetti from "react-confetti";
 import { EnterTradesTable } from "./EnterTradesTable";
+import MaskedInput from "react-text-mask";
+
 /*********
  * 3 Steps:ti
  * 1) Check Access Code
@@ -284,7 +286,9 @@ const UserInfo = ({
           <TextField
             value={subdomain}
             onChange={(e) => {
-              setSubdomain(e.target.value);
+              let temp = e.target.value;
+              temp = temp.replace(/\W/g, "");
+              setSubdomain(temp);
               setSubdomainError("");
             }}
             onBlur={(e) => checkUnique({ subdomain: subdomain })}
