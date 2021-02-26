@@ -11,7 +11,7 @@ import {
   TableHead,
 } from "@material-ui/core";
 import { useTheme } from "@material-ui/core/styles";
-import PropTypes from "prop-types";
+import NumberFormat from "react-number-format";
 import axios from "axios";
 
 let BASE_DOMAIN = `https://api.withlaguna.com`;
@@ -40,10 +40,39 @@ const formValues = {
     pl: "$10.01",
     init: "",
     required: true,
+    number: true,
   },
-  quantity: { title: "Quantity", pl: "5", init: "", required: true },
+  quantity: {
+    title: "Quantity",
+    pl: "5",
+    init: "",
+    required: true,
+    number: true,
+  },
   ticker: { title: "Ticker", pl: "AAPL", init: "", required: true },
 };
+
+function NumberFormatCustom(props) {
+  const { inputRef, onChange, ...other } = props;
+
+  return (
+    <NumberFormat
+      {...other}
+      getInputRef={inputRef}
+      onValueChange={(values) => {
+        onChange({
+          target: {
+            name: props.name,
+            value: values.value,
+          },
+        });
+      }}
+      thousandSeparator
+      isNumericString
+      prefix="$"
+    />
+  );
+}
 
 const NewTradeRow = ({ userId, onSubmit }) => {
   const editableTrades = Object.keys(formValues).reduce((res, key) => {
