@@ -213,6 +213,13 @@ const UserInfo = ({
   return (
     <>
       <Typography variant="h4">Account creation and configuration</Typography>
+      {!editId && (
+        <>
+          <Typography variant="h6">
+            <Link href="/signin">Sign in</Link>
+          </Typography>
+        </>
+      )}
       {add_plaid && (
         <div
           style={{
