@@ -878,7 +878,6 @@ export const AccessForm = () => {
   // IF in refresh mode
   useEffect(() => {
     let hash = window.location.hash;
-    console.log(path);
     if (hash == "#/signin") {
       setStep(6);
     }
