@@ -763,7 +763,7 @@ export const AccessForm = () => {
   // Ignore Access Code
   const [step, setStep] = useState(1);
   const [refresh, setRefresh] = useState(false);
-  const [userId, setUserId] = useState(0);
+  const [userId, setUserId] = useState();
   const [editId, setEditId] = useState();
   const [err, setErr] = useState(false);
   const [editDetails, setEditDetails] = useState({

@@ -158,15 +158,10 @@ useEffect(() => {
     // set trades from BE that were manually entered
     axios.get(`${BASE_DOMAIN}/stonks/access/trades/${userId}`).then((res) => {
       if (res.data.allow) {
-        console.log('trades loaded: ' + res.data.trades.length)
-        setTrades(res.data.trades);
         
-        if (res.data.trades.length > 0) {
-          enableContinue(true)
-          
-        } else{
-          enableContinue(false)
-        }
+        setTrades(res.data.trades);
+        enableContinue(res.data.trades.length > 0);
+      
       }
     });
   }, []);
@@ -177,18 +172,15 @@ useEffect(() => {
     // some logic to insert a trade here
     var tmp = [...trades, editTrade]
     setTrades(tmp);
-    if (tmp.length > 0) {
-      enableContinue(true)
+  
+    enableContinue(true)
 
-    } else{
-      enableContinue(false)
-    }
     
   };
 
   // Add new trade row
 
-  console.log('curren trade length: ' + trades.length)
+  
 
   return (
     <Table
