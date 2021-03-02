@@ -412,7 +412,7 @@ const UserInfo = ({
       {!!userId && (
         <>
           <Typography variant="h4">Manual trades</Typography>
-          <EnterTradesTable userId={userId} />
+          <EnterTradesTable userId={userId} enableContinue={() => {}} />
         </>
       )}
     </>
@@ -544,6 +544,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const [error, setError] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const theme = useTheme();
+  const [enableContinue, setEnableContinue] = useState(false);
 
   const [plaidStatus, setPlaidStatus] = useState([]);
 
@@ -708,7 +709,8 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       <>
         {showTable && (
           <>
-            <EnterTradesTable userId={userId} />
+            <EnterTradesTable userId={userId} enableContinue={setEnableContinue} />
+            
             <Button
               onClick={() => {
                 advanceStep();
@@ -718,6 +720,8 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
                   "linear-gradient(to top right, #729FBF, #E0CDE1)",
                 color: "white",
               }}
+              disabled={enableContinue ? null : 'disable'}
+           
             >
               CONTINUE
             </Button>

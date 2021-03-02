@@ -185,25 +185,37 @@ const NewTradeRow = ({ userId, onSubmit }) => {
   );
 };
 
-export const EnterTradesTable = ({ userId }) => {
+export const EnterTradesTable = ({ userId, enableContinue}) => {
   const [trades, setTrades] = useState([]);
   const theme = useTheme();
 
-  useEffect(() => {
+useEffect(() => {
     // set trades from BE that were manually entered
     axios.get(`${BASE_DOMAIN}/stonks/access/trades/${userId}`).then((res) => {
       if (res.data.allow) {
+        
         setTrades(res.data.trades);
+        enableContinue(res.data.trades.length > 0);
+      
       }
     });
   }, []);
 
-  const onSubmit = (editTrades) => {
+
+
+  const onSubmit = (editTrade) => {
     // some logic to insert a trade here
-    setTrades([...trades, editTrades]);
+    var tmp = [...trades, editTrade]
+    setTrades(tmp);
+  
+    enableContinue(true)
+
+    
   };
 
   // Add new trade row
+
+  
 
   return (
     <Table
