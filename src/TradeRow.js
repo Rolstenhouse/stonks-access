@@ -42,7 +42,7 @@ class TradeRow extends React.Component {
         <TableCell>
           <TextField
             value={this.state.value_ticker}
-            placeholder="AAPL/USD"
+            placeholder="AAPL/CASH"
             InputProps={{
               style: {
                 color:
@@ -64,7 +64,7 @@ class TradeRow extends React.Component {
             allowNegative={false}
             decimalScale="1"
             customInput={TextField}
-            placeholder="10.0"
+            placeholder={this.props.weightPlace}
             InputProps={{
               endAdornment: <InputAdornment position="start">%</InputAdornment>,
             }}

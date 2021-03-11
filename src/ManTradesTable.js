@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import TradeRow from "./TradeRow";
 import { PieChart } from "react-minimal-pie-chart";
 import { piePallete } from "./colors";
+// import { useTheme } from "@material-ui/core/styles";
 
 import {
   Button,
@@ -12,9 +13,11 @@ import {
   TableBody,
   TableHead,
   Typography,
+  IconButton
 } from "@material-ui/core";
 
 import axios from "axios";
+
 
 let BASE_DOMAIN = `https://api.withlaguna.com`;
 if (process.env.NODE_ENV === "development") BASE_DOMAIN = "http://0.0.0.0:5000";
@@ -25,8 +28,10 @@ let REDIRECT_DOMAIN =
     : ".withlaguna.com/";
 let REDIRECT_BASE =
   process.env.NODE_ENV === "development" ? "http://" : "https://";
+//   const theme = useTheme();
 
 class ManTradesTable extends React.Component {
+    
   constructor(props) {
     super(props);
     // const [trades, setTrades] = useState([])
@@ -37,6 +42,7 @@ class ManTradesTable extends React.Component {
       total_weight: 0,
       validPortfolio: false,
     };
+    
   }
 
   handleCreate = () => {
@@ -83,7 +89,7 @@ class ManTradesTable extends React.Component {
     let errMsg = undefined;
     if (
       new_trades.reduce((isDup, t, i) => {
-        return isDup || (t.ticker == ticker && index != i);
+        return isDup || (t.ticker == ticker && index != i && ticker != '');
       }, false)
     ) {
       errMsg = "Duplicate ticker: ".concat(ticker);
@@ -116,15 +122,17 @@ class ManTradesTable extends React.Component {
 
     return (
       <div>
+          
+         
+          
+          
         <Typography variant="h4">
           Manually Enter Your Holdings to Create Your Portfolio
         </Typography>
         <Typography style={{ color: "gray" }} variant="subtitle1">
           Ensure your percentages add up to 100%
         </Typography>
-        {this.state.errMsg != undefined && (
-          <Typography style={{ color: "red" }}>{this.state.errMsg}</Typography>
-        )}
+        
 
         <div
           style={{ display: "flex", alignItems: "flex-start", marginTop: 20 }}
@@ -141,6 +149,7 @@ class ManTradesTable extends React.Component {
                 {this.state.trades.map((t, index) => {
                   return (
                     <TradeRow
+                      weightPlace={(100 - this.state.total_weight).toFixed(1)}
                       handleEdit={this.handleHoldingEdit}
                       ticker={t.ticker}
                       weight={t.weight}
@@ -150,7 +159,17 @@ class ManTradesTable extends React.Component {
                   );
                 })}
               </TableBody>
+              {this.state.errMsg != undefined && (
+          <Typography 
+          variant="caption"
+          style={{ color: "red",
+          textAlign: "left",
+          
+          marginTop: 5 }}>{this.state.errMsg}</Typography>
+        )}
             </Table>
+
+            
             <div
               style={{
                 textAlign: "right",
@@ -167,6 +186,8 @@ class ManTradesTable extends React.Component {
               </span>{" "}
               of 100%
             </div>
+
+          
 
             <Button
               disabled={!this.state.validPortfolio}

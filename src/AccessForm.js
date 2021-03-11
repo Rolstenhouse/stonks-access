@@ -11,7 +11,7 @@ import ManTradesTable from "./ManTradesTable";
 import MaskedInput from "react-text-mask";
 import { Formik, Form, Field } from "formik";
 import { Redirect } from "react-router";
-
+import { ArrowBackIosRounded } from "@material-ui/icons";
 /*********
  * 3 Steps:ti
  * 1) Check Access Code
@@ -34,6 +34,7 @@ import {
   CircularProgress,
   LinearProgress,
   Link,
+  IconButton
 } from "@material-ui/core";
 
 import { Alert } from "@material-ui/lab";
@@ -1015,6 +1016,11 @@ export const AccessForm = () => {
       }}
     >
       <Grid item xs={11} sm={8} md={6}>
+      {(step == 7 || step ==5) && <IconButton size="small" style={{float: 'left',  marginTop: theme.spacing(3)}}
+                    onClick={() => setStep(2)}>
+                <ArrowBackIosRounded/>
+                Back
+        </IconButton>}
         <Paper
           style={{
             paddingTop: theme.spacing(12),
