@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import TradeRow from './TradeRow'
 import { PieChart } from 'react-minimal-pie-chart';
+import {piePallete} from './colors'
+
 
 
 import {
@@ -19,10 +21,16 @@ import {
   let BASE_DOMAIN = `https://api.withlaguna.com`;
   if (process.env.NODE_ENV === "development") BASE_DOMAIN = "http://0.0.0.0:5000";
 
+  let REDIRECT_DOMAIN = (process.env.NODE_ENV === "development") ?  '.localhost:4200/' : '.withlaguna.com/'
+  let REDIRECT_BASE = (process.env.NODE_ENV === "development") ?  'http://' : 'https://'
+
+  
+
 class ManTradesTable extends React.Component{
     constructor(props){
         super(props)
         // const [trades, setTrades] = useState([])
+        // consol
         this.state = {trades: [{placeholder: true}], total_weight: 0}
         
     }
@@ -31,36 +39,32 @@ class ManTradesTable extends React.Component{
         // this.props.onTemperatureChange(e.target.value)
         console.log('Create was clicked')
 
-        // axios
-        // .post(`${BASE_DOMAIN}/holdings/create/${userId}`, editTrades)
-        // .then((res) => {
-        //   if (res.data.allow) {
-        //     onSubmit(editTrades);
-        //     // Clear trading entries
-        //     setEditTrades(editableTrades);
-        //   } else {
-        //     setGeneralError(res.data);
-        //   }
-        // })
-        // .catch((err) => {
-        //   if (err.response) {
-        //     // check data
-        //     const err_msg = err.response.data.err;
-        //     if (!!err_msg?.form) {
-        //       setErrorTrades(
-        //         err_msg.form.reduce((res, filter) => {
-        //           const k = Object.keys(filter)[0];
-        //           const v = filter[k];
-        //           res[k] = v;
-        //           return res;
-        //         }, {})
-        //       );
-        //     } else {
-        //       setGeneralError(JSON.stringify(err_msg));
-        //     }
-        //   }
-        //   // something went wrong here
-        // });
+
+
+        axios
+        .post(`${BASE_DOMAIN}/stonks/holdings/create/${this.props.userId}`, this.state.trades.filter((t) => (!t.placeholder && !isNaN(t.weight))))
+        .then((res) => {
+          
+            console.log('success', res.data)
+            const redirect_str = REDIRECT_BASE.concat(res.data, REDIRECT_DOMAIN)
+            window.location.href = redirect_str
+            
+            
+          
+        })
+        .catch((err) => {
+
+            if (err.response) {
+                // check data
+                const errMsg = err.response.data.errMsg
+                this.setState({errMsg: errMsg})
+                
+                
+                
+            } 
+ 
+        });
+
 
       }
 
@@ -100,10 +104,10 @@ class ManTradesTable extends React.Component{
 
     render(){
 
-        const pallete = ['#0074D9', '#FF4136', '#2ECC40', '#FF851B', '#7FDBFF', '#B10DC9', '#FFDC00', '#001f3f', '#39CCCC', '#01FF70', '#85144b', '#F012BE', '#3D9970', '#111111', '#AAAAAA']
+        
         var data = this.state.trades.filter((t) => (!t.placeholder && !isNaN(t.weight))).map((t, index) => {
  
-                const slice =  {title: t.ticker, value : t.weight, color : pallete[index % pallete.length]}
+                const slice =  {title: t.ticker, value : t.weight, color : piePallete[index % piePallete.length]}
                 console.log(slice)
                 return slice
             
@@ -115,9 +119,15 @@ class ManTradesTable extends React.Component{
             <Typography variant="h4" >
                 Manual Enter Your Holdings to Create Your Portfolio
             </Typography>
-            <Typography style={{color: "gray"}}>
-                Ensure your percentages add up to 100!
+            <Typography style={{color: "gray"}} variant="subtitle1">
+                Ensure your percentages add up to 100%
             </Typography>
+            {this.state.errMsg != undefined && (
+                <Typography style={{color:'red'}}>
+                    {this.state.errMsg}
+                </Typography>
+            ) }
+
         <div style={{ display: "flex", alignItems: "flex-start", marginTop:20}}>
             <div style={{ flexGrow: "1",
                         marginLeft: 20}}>
@@ -132,9 +142,9 @@ class ManTradesTable extends React.Component{
                 {
                     this.state.trades.map((t, index) => {
                         if (t.placeholder){
-                            return <TradeRow handleEdit={this.handleHoldingEdit} place_ticker='AAPL' place_weight='10' index = {index} color={pallete[index % pallete.length]}/>
+                            return <TradeRow handleEdit={this.handleHoldingEdit} place_ticker='AAPL/USD' place_weight='10' index = {index} color={piePallete[index % piePallete.length]}/>
                         } else{
-                            return <TradeRow handleEdit={this.handleHoldingEdit} ticker={t.ticker} place_ticker='AAPL' place_weight='10' weight={t.weight.toString()} index={index} color={pallete[index % pallete.length]}/>
+                            return <TradeRow handleEdit={this.handleHoldingEdit} ticker={t.ticker} place_ticker='AAPL/USD' place_weight='10' weight={t.weight.toString()} index={index} color={piePallete[index % piePallete.length]}/>
                         }
                     })
                 }
@@ -166,7 +176,7 @@ class ManTradesTable extends React.Component{
             viewBoxSize = {[100,100]}
             center = {[50,30]}
             lengthAngle={Math.min(this.state.total_weight / 100 * 360, 360)}
-            data={data.length > 0 ? data : [{title: 'None', value : 100, color : "#DCDCDC"}]}
+            data={data}
             />
         
 </div>

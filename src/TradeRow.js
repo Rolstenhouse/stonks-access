@@ -20,9 +20,9 @@ import {
         super(props)
 
         if (this.props.ticker == null) {
-            this.state = {'value_ticker': '', 'value_weight': ''}
+            this.state = {value_ticker: '', value_weight: ''}
         } else{
-            this.state = {'value_ticker': this.props.ticker, 'value_weight': this.props.weight}
+            this.state = {value_ticker: this.props.ticker, value_weight: this.props.weight}
         }
         
        
