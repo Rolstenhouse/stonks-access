@@ -32,7 +32,7 @@ class ManTradesTable extends React.Component {
     // const [trades, setTrades] = useState([])
     // consol
     // trade invariant: stored
-    this.state = { trades: [{ ticker: "", weight: null }], total_weight: 0 };
+    this.state = { trades: [{ ticker: "", weight: null }], total_weight: 0, validPortfolio: false};
   }
 
   handleCreate = () => {
@@ -46,8 +46,10 @@ class ManTradesTable extends React.Component {
       )
       .then((res) => {
         console.log("success", res.data);
-        const redirect_str = REDIRECT_BASE.concat(res.data, REDIRECT_DOMAIN);
-        window.location.href = redirect_str;
+        // const redirect_str = REDIRECT_BASE.concat(res.data, REDIRECT_DOMAIN);
+        // window.location.href = redirect_str;
+        this.props.advanceStep(8)
+
       })
       .catch((err) => {
         if (err.response) {
@@ -61,6 +63,7 @@ class ManTradesTable extends React.Component {
   handleHoldingEdit = (ticker, weight, index) => {
     //   new_trades = this.state.trades
     console.log("handle holding edit with index ", index, ticker);
+    let validPortfolio = true
 
     const new_trades = this.state.trades;
     if (index + 1 >= new_trades.length && ticker != "" && !isNaN(weight)) {
@@ -72,10 +75,24 @@ class ManTradesTable extends React.Component {
     const total_weight = new_trades.reduce((sum, t) => {
         return sum + (t.weight ?  parseFloat(t.weight) : 0);
     }, 0);
+    if (total_weight != 100) validPortfolio = false
+
+    let errMsg = undefined
+    if (new_trades.reduce((isDup, t, i) => {
+        return isDup || (t.ticker == ticker && index != i)
+    }, false)){
+        errMsg = 'Duplicate ticker: '.concat(ticker)
+        validPortfolio = false
+    } 
+
+ 
+
+
+
 
     console.log("total weight", total_weight);
 
-    this.setState({ trades: new_trades, total_weight: total_weight });
+    this.setState({ trades: new_trades, total_weight: total_weight, errMsg: errMsg, validPortfolio: validPortfolio});
   };
 
   render() {
@@ -95,7 +112,7 @@ class ManTradesTable extends React.Component {
     return (
       <div>
         <Typography variant="h4">
-          Manual Enter Your Holdings to Create Your Portfolio
+          Manually Enter Your Holdings to Create Your Portfolio
         </Typography>
         <Typography style={{ color: "gray" }} variant="subtitle1">
           Ensure your percentages add up to 100%
@@ -147,13 +164,13 @@ class ManTradesTable extends React.Component {
             </div>
 
             <Button
-              disabled={this.state.total_weight != 100}
+              disabled={!this.state.validPortfolio}
               onClick={this.handleCreate}
               style={{
                 backgroundImage:
                   "linear-gradient(to top right, #A01A7D, #EC4067)",
                 color: "white",
-                opacity: this.state.total_weight == 100 ? 1.0 : 0.5,
+                opacity: this.state.validPortfolio ? 1.0 : 0.5,
                 marginTop: 20,
               }}
             >

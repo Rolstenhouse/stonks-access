@@ -18,6 +18,7 @@
     "react": "^17.0.1",
     "react-confetti": "^6.0.0",
     "react-dom": "^17.0.1",
+    "react-maskedinput": "^4.0.1",
     "react-minimal-pie-chart": "^8.1.0",
     "react-number-format": "^4.4.4",
     "react-plaid-link": "^3.0.0",

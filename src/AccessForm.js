@@ -177,6 +177,7 @@ const UserInfo = ({
             email: email,
             phone: phone,
             plaid_connected: editDetails.plaid_connected,
+            editUrl: res.data.editUrl
           });
           advanceStep();
         } else {
@@ -710,7 +711,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       <>
         {showTable && (
           <>
-            <ManTradesTable userId={userId} />
+            <ManTradesTable userId={userId}/>
             <Button
               onClick={() => {
                 advanceStep();
@@ -749,6 +750,56 @@ const Wait = () => {
     </>
   );
 };
+
+
+const Finished = ({displayDetail}) => {
+  const { width, height } = useWindowSize();
+  console.log('in finish with display', displayDetail)
+  let REDIRECT_BASE =
+  process.env.NODE_ENV === "development" ? "http://" : "https://";
+  let REDIRECT_DOMAIN =
+  process.env.NODE_ENV === "development"
+    ? ".localhost:4200/"
+    : ".withlaguna.com/";
+
+  const pageUrl = `${REDIRECT_BASE}${displayDetail.subdomain}${REDIRECT_DOMAIN}`
+
+  return (
+    <>
+      <Confetti width={width} height={height} />
+      <Typography variant="h4">
+        Congrats {displayDetail.name}! 
+      </Typography>
+      <Typography variant="h5">
+        Your page is ready at
+      </Typography>
+      <Typography >
+        <Link href={pageUrl}>
+        {displayDetail.subdomain}.withLaguna.com
+        </Link>
+      </Typography>
+
+      <Typography style={{marginTop:30}} >
+        You can edit your profile at <br/><Link href={displayDetail.editUrl}>
+        {displayDetail.editUrl}
+        </Link>
+      </Typography>
+
+      <Button
+      href = {pageUrl}
+              style={{
+                backgroundImage:
+                  "linear-gradient(to top right, #A01A7D, #EC4067)",
+                color: "white",
+                marginTop: 50,
+              }}
+            >
+              View Page
+        </Button>
+
+    </>
+  );
+}
 
 const Update = () => {
   const { width, height } = useWindowSize();
@@ -869,7 +920,7 @@ export const AccessForm = () => {
     description: "",
     link: "",
     subdomain: "",
-    show_amounts: "no",
+    show_amounts: "",
     name: "",
     email: "",
     phone: "",
@@ -956,7 +1007,8 @@ export const AccessForm = () => {
       else if (step === 5)
         return <InstructiveFileUpload userId={userId} advanceStep={setStep} />;
       else if (step == 6) return <SignIn />;
-      else if (step == 7) return <ManTradesTable userId={userId} />;
+      else if (step == 7) return <ManTradesTable userId={userId} advanceStep={setStep} />;
+      else if (step == 8) return <Finished displayDetail={editDetails}/>
       else return <></>;
     }
   }
