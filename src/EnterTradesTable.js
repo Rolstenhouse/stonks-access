@@ -115,7 +115,7 @@ const NewTradeRow = ({ userId, onSubmit }) => {
     }
 
     axios
-      .post(`${BASE_DOMAIN}/a/${userId}`, editTrades)
+      .post(`${BASE_DOMAIN}/stonks/access/insert/${userId}`, editTrades)
       .then((res) => {
         if (res.data.allow) {
           onSubmit(editTrades);

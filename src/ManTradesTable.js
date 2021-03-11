@@ -32,7 +32,11 @@ class ManTradesTable extends React.Component {
     // const [trades, setTrades] = useState([])
     // consol
     // trade invariant: stored
-    this.state = { trades: [{ ticker: "", weight: null }], total_weight: 0, validPortfolio: false};
+    this.state = {
+      trades: [{ ticker: "", weight: null }],
+      total_weight: 0,
+      validPortfolio: false,
+    };
   }
 
   handleCreate = () => {
@@ -48,8 +52,7 @@ class ManTradesTable extends React.Component {
         console.log("success", res.data);
         // const redirect_str = REDIRECT_BASE.concat(res.data, REDIRECT_DOMAIN);
         // window.location.href = redirect_str;
-        this.props.advanceStep(8)
-
+        this.props.advanceStep(8);
       })
       .catch((err) => {
         if (err.response) {
@@ -63,7 +66,7 @@ class ManTradesTable extends React.Component {
   handleHoldingEdit = (ticker, weight, index) => {
     //   new_trades = this.state.trades
     console.log("handle holding edit with index ", index, ticker);
-    let validPortfolio = true
+    let validPortfolio = true;
 
     const new_trades = this.state.trades;
     if (index + 1 >= new_trades.length && ticker != "" && !isNaN(weight)) {
@@ -73,26 +76,28 @@ class ManTradesTable extends React.Component {
     new_trades[index] = { weight: weight, ticker: ticker };
 
     const total_weight = new_trades.reduce((sum, t) => {
-        return sum + (t.weight ?  parseFloat(t.weight) : 0);
+      return sum + (t.weight ? parseFloat(t.weight) : 0);
     }, 0);
-    if (total_weight != 100) validPortfolio = false
+    if (total_weight != 100) validPortfolio = false;
 
-    let errMsg = undefined
-    if (new_trades.reduce((isDup, t, i) => {
-        return isDup || (t.ticker == ticker && index != i)
-    }, false)){
-        errMsg = 'Duplicate ticker: '.concat(ticker)
-        validPortfolio = false
-    } 
-
- 
-
-
-
+    let errMsg = undefined;
+    if (
+      new_trades.reduce((isDup, t, i) => {
+        return isDup || (t.ticker == ticker && index != i);
+      }, false)
+    ) {
+      errMsg = "Duplicate ticker: ".concat(ticker);
+      validPortfolio = false;
+    }
 
     console.log("total weight", total_weight);
 
-    this.setState({ trades: new_trades, total_weight: total_weight, errMsg: errMsg, validPortfolio: validPortfolio});
+    this.setState({
+      trades: new_trades,
+      total_weight: total_weight,
+      errMsg: errMsg,
+      validPortfolio: validPortfolio,
+    });
   };
 
   render() {
