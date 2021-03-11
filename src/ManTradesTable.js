@@ -31,18 +31,19 @@ class ManTradesTable extends React.Component{
         super(props)
         // const [trades, setTrades] = useState([])
         // consol
-        this.state = {trades: [{placeholder: true}], total_weight: 0}
+        // trade invariant: stored 
+        this.state = {trades: [{ticker:'', weight:null}], total_weight: 0}
         
     }
 
     handleCreate = () => {
         // this.props.onTemperatureChange(e.target.value)
-        console.log('Create was clicked')
+        console.log('Create was clicked', this.state.trades)
 
 
 
         axios
-        .post(`${BASE_DOMAIN}/stonks/holdings/create/${this.props.userId}`, this.state.trades.filter((t) => (!t.placeholder && !isNaN(t.weight))))
+        .post(`${BASE_DOMAIN}/stonks/holdings/create/${this.props.userId}`, this.state.trades.filter((t) => (!isNaN(t.weight) && t.ticker != '')))
         .then((res) => {
           
             console.log('success', res.data)
@@ -68,22 +69,24 @@ class ManTradesTable extends React.Component{
 
       }
 
+
      handleHoldingEdit = (ticker, weight, index) => {
 
         //   new_trades = this.state.trades
         console.log('handle holding edit with index ', index, ticker)
         
         const new_trades = this.state.trades
-        if (new_trades[index].placeholder) {
-            new_trades.push({placeholder: true})
+        if ((index + 1) >= new_trades.length && ticker != '' && !isNaN(weight)){
+            new_trades.push({ticker:'', weight:null})
         }
-        new_trades[index] = {placeholder: false, weight: weight, ticker:ticker}
+
+        new_trades[index] = {weight: weight, ticker:ticker}
 
 
  
         
         const total_weight = new_trades.reduce((sum, t) => {
-            if ( !isNaN(t.weight) && t.weight != '') {
+            if (!isNaN(t.weight) && t.weight != null) {
                 console.log(t)
                 return parseFloat(t.weight) + sum
             } else{
@@ -95,7 +98,7 @@ class ManTradesTable extends React.Component{
 
 
         this.setState({trades: new_trades, 
-                        total_weight, total_weight})
+                        total_weight : total_weight})
 
 
 
@@ -105,9 +108,10 @@ class ManTradesTable extends React.Component{
     render(){
 
         
-        var data = this.state.trades.filter((t) => (!t.placeholder && !isNaN(t.weight))).map((t, index) => {
- 
-                const slice =  {title: t.ticker, value : t.weight, color : piePallete[index % piePallete.length]}
+        var data = this.state.trades.map((t, index) => {
+                const weight = isNaN(t.weight) ? 0 : t.weight
+                
+                const slice =  {title: t.ticker, value : weight, color : piePallete[index % piePallete.length]}
                 console.log(slice)
                 return slice
             
@@ -141,11 +145,9 @@ class ManTradesTable extends React.Component{
             <TableBody>
                 {
                     this.state.trades.map((t, index) => {
-                        if (t.placeholder){
-                            return <TradeRow handleEdit={this.handleHoldingEdit} place_ticker='AAPL/USD' place_weight='10' index = {index} color={piePallete[index % piePallete.length]}/>
-                        } else{
-                            return <TradeRow handleEdit={this.handleHoldingEdit} ticker={t.ticker} place_ticker='AAPL/USD' place_weight='10' weight={t.weight.toString()} index={index} color={piePallete[index % piePallete.length]}/>
-                        }
+     
+                            return <TradeRow handleEdit={this.handleHoldingEdit} ticker={t.ticker} place_ticker='AAPL/USD' place_weight='10' weight={t.weight} index={index} color={piePallete[index % piePallete.length]}/>
+                        
                     })
                 }
 
