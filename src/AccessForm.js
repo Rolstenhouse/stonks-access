@@ -7,9 +7,11 @@ import { useTheme } from "@material-ui/core/styles";
 import useWindowSize from "react-use/lib/useWindowSize";
 import Confetti from "react-confetti";
 import { EnterTradesTable } from "./EnterTradesTable";
+import ManTradesTable from "./ManTradesTable";
 import MaskedInput from "react-text-mask";
 import { Formik, Form, Field } from "formik";
-
+import { Redirect } from "react-router";
+import { ArrowBackIosRounded } from "@material-ui/icons";
 /*********
  * 3 Steps:ti
  * 1) Check Access Code
@@ -32,6 +34,7 @@ import {
   CircularProgress,
   LinearProgress,
   Link,
+  IconButton
 } from "@material-ui/core";
 
 import { Alert } from "@material-ui/lab";
@@ -175,6 +178,7 @@ const UserInfo = ({
             email: email,
             phone: phone,
             plaid_connected: editDetails.plaid_connected,
+            editUrl: res.data.editUrl,
           });
           advanceStep();
         } else {
@@ -412,7 +416,7 @@ const UserInfo = ({
       {!!userId && (
         <>
           <Typography variant="h4">Manual trades</Typography>
-          <EnterTradesTable userId={userId} />
+          <ManTradesTable userId={userId} />
         </>
       )}
     </>
@@ -609,7 +613,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const { open, ready, plaidError } = usePlaidLink(config);
 
   const handleManualEntry = () => {
-    setShowTable(true);
+    advanceStep(7);
   };
 
   const handleFileUpload = () => {
@@ -708,7 +712,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       <>
         {showTable && (
           <>
-            <EnterTradesTable userId={userId} />
+            <ManTradesTable userId={userId} />
             <Button
               onClick={() => {
                 advanceStep();
@@ -744,6 +748,46 @@ const Wait = () => {
       <Typography variant="caption">
         Feedback? Email team@withlaguna.com
       </Typography>
+    </>
+  );
+};
+
+const Finished = ({ displayDetail }) => {
+  const { width, height } = useWindowSize();
+  console.log("in finish with display", displayDetail);
+  let REDIRECT_BASE =
+    process.env.NODE_ENV === "development" ? "http://" : "https://";
+  let REDIRECT_DOMAIN =
+    process.env.NODE_ENV === "development"
+      ? ".localhost:4200/"
+      : ".withlaguna.com/";
+
+  const pageUrl = `${REDIRECT_BASE}${displayDetail.subdomain}${REDIRECT_DOMAIN}`;
+
+  return (
+    <>
+      <Confetti width={width} height={height} />
+      <Typography variant="h4">Congrats {displayDetail.name}!</Typography>
+      <Typography variant="h5">Your page is ready at</Typography>
+      <Typography>
+        <Link href={pageUrl}>{displayDetail.subdomain}.withLaguna.com</Link>
+      </Typography>
+
+      <Typography style={{ marginTop: 30 }}>
+        You can edit your profile at <br />
+        <Link href={displayDetail.editUrl}>{displayDetail.editUrl}</Link>
+      </Typography>
+
+      <Button
+        href={pageUrl}
+        style={{
+          backgroundImage: "linear-gradient(to top right, #A01A7D, #EC4067)",
+          color: "white",
+          marginTop: 50,
+        }}
+      >
+        View Page
+      </Button>
     </>
   );
 };
@@ -954,6 +998,9 @@ export const AccessForm = () => {
       else if (step === 5)
         return <InstructiveFileUpload userId={userId} advanceStep={setStep} />;
       else if (step == 6) return <SignIn />;
+      else if (step == 7)
+        return <ManTradesTable userId={userId} advanceStep={setStep} />;
+      else if (step == 8) return <Finished displayDetail={editDetails} />;
       else return <></>;
     }
   }
@@ -969,6 +1016,11 @@ export const AccessForm = () => {
       }}
     >
       <Grid item xs={11} sm={8} md={6}>
+      {(step == 7 || step ==5) && <IconButton size="small" style={{float: 'left',  marginTop: theme.spacing(3)}}
+                    onClick={() => setStep(2)}>
+                <ArrowBackIosRounded/>
+                Back
+        </IconButton>}
         <Paper
           style={{
             paddingTop: theme.spacing(12),
