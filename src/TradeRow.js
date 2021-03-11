@@ -49,10 +49,15 @@ class TradeRow extends React.Component {
                   this.state.value_ticker == "" ? undefined : this.props.color,
               },
             }}
+            inputProps={{
+                style: {
+                    textTransform: "uppercase"
+                },
+              }}
             onChange={(e) => {
               this.setState({ value_ticker: e.target.value });
               this.props.handleEdit(
-                e.target.value,
+                e.target.value.toUpperCase(),
                 parseFloat(this.state.value_weight),
                 this.props.index
               );
