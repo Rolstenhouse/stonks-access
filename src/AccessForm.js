@@ -7,8 +7,10 @@ import { useTheme } from "@material-ui/core/styles";
 import useWindowSize from "react-use/lib/useWindowSize";
 import Confetti from "react-confetti";
 import { EnterTradesTable } from "./EnterTradesTable";
+import ManTradesTable from "./ManTradesTable";
 import MaskedInput from "react-text-mask";
 import { Formik, Form, Field } from "formik";
+import { Redirect } from 'react-router'
 
 /*********
  * 3 Steps:ti
@@ -412,7 +414,7 @@ const UserInfo = ({
       {!!userId && (
         <>
           <Typography variant="h4">Manual trades</Typography>
-          <EnterTradesTable userId={userId} />
+          <ManTradesTable userId={userId} />
         </>
       )}
     </>
@@ -609,7 +611,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
   const { open, ready, plaidError } = usePlaidLink(config);
 
   const handleManualEntry = () => {
-    setShowTable(true);
+    advanceStep(7);
   };
 
   const handleFileUpload = () => {
@@ -708,7 +710,7 @@ const PlaidInfo = ({ advanceStep, userId, refresh, title }) => {
       <>
         {showTable && (
           <>
-            <EnterTradesTable userId={userId} />
+            <ManTradesTable userId={userId} />
             <Button
               onClick={() => {
                 advanceStep();
@@ -954,6 +956,7 @@ export const AccessForm = () => {
       else if (step === 5)
         return <InstructiveFileUpload userId={userId} advanceStep={setStep} />;
       else if (step == 6) return <SignIn />;
+      else if (step == 7) return <ManTradesTable userId={userId} />;
       else return <></>;
     }
   }
