@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import MaskedInput from "react-maskedinput";
 
 import {
   Button,
@@ -13,17 +14,27 @@ import {
 import { useTheme } from "@material-ui/core/styles";
 import NumberFormat from "react-number-format";
 
+function WeightInput(props) {
+  return (
+    <NumberFormat
+      allowNegative={false}
+      decimalScale="1"
+      customInput={TextField}
+      placeholder="10.0"
+    />
+  );
+}
+
 class TradeRow extends React.Component {
   constructor(props) {
     super(props);
 
-      this.state = {
-        value_ticker: this.props.ticker,
-        value_weight: this.props.weight,
-      }
-
-    }
-  
+    this.state = {
+      value_ticker: this.props.ticker,
+      value_weight: this.props.weight,
+      errText: undefined,
+    };
+  }
 
   render() {
     return (
@@ -49,17 +60,20 @@ class TradeRow extends React.Component {
           />
         </TableCell>
         <TableCell>
-          <TextField
-            value={this.state.value_weight}
-            placeholder='10'
+          <NumberFormat
+            allowNegative={false}
+            decimalScale="1"
+            customInput={TextField}
+            placeholder="10.0"
             InputProps={{
               endAdornment: <InputAdornment position="start">%</InputAdornment>,
             }}
-            onChange={(e) => {
-              this.setState({ value_weight: e.target.value });
+            onValueChange={(e) => {
+              console.log("handle change", e.floatValue);
+              this.setState({ value_weight: e.floatValue });
               this.props.handleEdit(
                 this.state.value_ticker,
-                parseFloat(e.target.value),
+                e.floatValue,
                 this.props.index
               );
             }}
