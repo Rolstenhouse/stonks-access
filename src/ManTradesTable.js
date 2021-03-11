@@ -70,12 +70,7 @@ class ManTradesTable extends React.Component {
     new_trades[index] = { weight: weight, ticker: ticker };
 
     const total_weight = new_trades.reduce((sum, t) => {
-      if (!isNaN(t.weight) && t.weight != null) {
-        console.log(t);
-        return parseFloat(t.weight) + sum;
-      } else {
-        return sum;
-      }
+        return sum + (t.weight ?  parseFloat(t.weight) : 0);
     }, 0);
 
     console.log("total weight", total_weight);
@@ -126,8 +121,6 @@ class ManTradesTable extends React.Component {
                     <TradeRow
                       handleEdit={this.handleHoldingEdit}
                       ticker={t.ticker}
-                      place_ticker="AAPL/USD"
-                      place_weight="10"
                       weight={t.weight}
                       index={index}
                       color={piePallete[index % piePallete.length]}

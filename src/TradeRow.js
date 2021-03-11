@@ -17,15 +17,13 @@ class TradeRow extends React.Component {
   constructor(props) {
     super(props);
 
-    if (this.props.ticker == null) {
-      this.state = { value_ticker: "", value_weight: "" };
-    } else {
       this.state = {
         value_ticker: this.props.ticker,
         value_weight: this.props.weight,
-      };
+      }
+
     }
-  }
+  
 
   render() {
     return (
@@ -33,7 +31,7 @@ class TradeRow extends React.Component {
         <TableCell>
           <TextField
             value={this.state.value_ticker}
-            placeholder={this.props.place_ticker}
+            placeholder="AAPL/USD"
             InputProps={{
               style: {
                 color:
@@ -53,7 +51,7 @@ class TradeRow extends React.Component {
         <TableCell>
           <TextField
             value={this.state.value_weight}
-            placeholder={this.props.place_weight}
+            placeholder='10'
             InputProps={{
               endAdornment: <InputAdornment position="start">%</InputAdornment>,
             }}
