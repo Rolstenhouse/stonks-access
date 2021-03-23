@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import TradeRow from "./TradeRow";
 import { PieChart } from "react-minimal-pie-chart";
 import { piePallete } from "./colors";
-// import { useTheme } from "@material-ui/core/styles";
 
 import {
   Button,
@@ -13,52 +12,41 @@ import {
   TableBody,
   TableHead,
   Typography,
-  IconButton
+  IconButton,
 } from "@material-ui/core";
 
 import axios from "axios";
 
-
 let BASE_DOMAIN = `https://api.withlaguna.com`;
-if (process.env.NODE_ENV === "development") BASE_DOMAIN = "http://0.0.0.0:5000";
-
-let REDIRECT_DOMAIN =
-  process.env.NODE_ENV === "development"
-    ? ".localhost:4200/"
-    : ".withlaguna.com/";
-let REDIRECT_BASE =
-  process.env.NODE_ENV === "development" ? "http://" : "https://";
-//   const theme = useTheme();
+// if (process.env.NODE_ENV === "development") BASE_DOMAIN = "http://0.0.0.0:5000";
 
 class ManTradesTable extends React.Component {
-    
   constructor(props) {
     super(props);
-    // const [trades, setTrades] = useState([])
-    // consol
-    // trade invariant: stored
     this.state = {
       trades: [{ ticker: "", weight: null }],
       total_weight: 0,
       validPortfolio: false,
     };
-    
   }
 
-  handleCreate = () => {
-    // this.props.onTemperatureChange(e.target.value)
-    console.log("Create was clicked", this.state.trades);
+  componentDidMount = () => {
+    console.log(this.props.editId);
 
+    axios.get(`${BASE_DOMAIN}/stonks/access/holdings`);
+  };
+
+  handleCreate = () => {
     axios
-      .post(
-        `${BASE_DOMAIN}/stonks/holdings/create/${this.props.userId}`,
-        this.state.trades.filter((t) => !isNaN(t.weight) && t.ticker != "")
-      )
+      .post(`${BASE_DOMAIN}/stonks/holdings/create`, {
+        user_id: this.props.userId,
+        edit_id: this.props.editId,
+        portfolio: this.state.trades.filter(
+          (t) => !isNaN(t.weight) && t.ticker != ""
+        ),
+      })
       .then((res) => {
-        console.log("success", res.data);
-        // const redirect_str = REDIRECT_BASE.concat(res.data, REDIRECT_DOMAIN);
-        // window.location.href = redirect_str;
-        this.props.advanceStep(8);
+        this.props.advanceStep && this.props.advanceStep(8);
       })
       .catch((err) => {
         if (err.response) {
@@ -70,8 +58,6 @@ class ManTradesTable extends React.Component {
   };
 
   handleHoldingEdit = (ticker, weight, index) => {
-    //   new_trades = this.state.trades
-    console.log("handle holding edit with index ", index, ticker);
     let validPortfolio = true;
 
     const new_trades = this.state.trades;
@@ -89,7 +75,7 @@ class ManTradesTable extends React.Component {
     let errMsg = undefined;
     if (
       new_trades.reduce((isDup, t, i) => {
-        return isDup || (t.ticker == ticker && index != i && ticker != '');
+        return isDup || (t.ticker == ticker && index != i && ticker != "");
       }, false)
     ) {
       errMsg = "Duplicate ticker: ".concat(ticker);
@@ -115,24 +101,17 @@ class ManTradesTable extends React.Component {
         value: weight,
         color: piePallete[index % piePallete.length],
       };
-      console.log(slice);
       return slice;
     });
-    console.log("data length: ", data.length);
 
     return (
       <div>
-          
-         
-          
-          
         <Typography variant="h4">
           Manually Enter Your Holdings to Create Your Portfolio
         </Typography>
         <Typography style={{ color: "gray" }} variant="subtitle1">
           Ensure your percentages add up to 100%
         </Typography>
-        
 
         <div
           style={{ display: "flex", alignItems: "flex-start", marginTop: 20 }}
@@ -160,16 +139,20 @@ class ManTradesTable extends React.Component {
                 })}
               </TableBody>
               {this.state.errMsg != undefined && (
-          <Typography 
-          variant="caption"
-          style={{ color: "red",
-          textAlign: "left",
-          
-          marginTop: 5 }}>{this.state.errMsg}</Typography>
-        )}
+                <Typography
+                  variant="caption"
+                  style={{
+                    color: "red",
+                    textAlign: "left",
+
+                    marginTop: 5,
+                  }}
+                >
+                  {this.state.errMsg}
+                </Typography>
+              )}
             </Table>
 
-            
             <div
               style={{
                 textAlign: "right",
@@ -186,8 +169,6 @@ class ManTradesTable extends React.Component {
               </span>{" "}
               of 100%
             </div>
-
-          
 
             <Button
               disabled={!this.state.validPortfolio}

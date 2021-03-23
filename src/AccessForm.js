@@ -896,6 +896,23 @@ const SignIn = ({}) => {
   );
 };
 
+const fetchEditDetails =  async (edit_id) =>{
+  await axios
+  .get(`${BASE_DOMAIN}/stonks/access/edit_info`, {
+    params: {
+      edit_id: edit_id,
+    },
+  })
+  .then((res) => {
+    let editable = Object.assign({}, res.data);
+    editable.show_amounts = !!editable.show_amounts ? "yes" : "no";
+    return editable
+  })
+  .catch((err) => {
+    return "err"
+  });
+}
+
 export const AccessForm = () => {
   // Ignore Access Code
   const [step, setStep] = useState(1);

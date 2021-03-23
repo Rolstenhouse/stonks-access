@@ -14,20 +14,23 @@ import ListItemText from "@material-ui/core/ListItemText";
 import MailIcon from "@material-ui/icons/Mail";
 import MenuIcon from "@material-ui/icons/Menu";
 import Toolbar from "@material-ui/core/Toolbar";
-import Typography from "@material-ui/core/Typography";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import {
+  Button,
+  Typography,
   Grid,
   Table,
   TableRow,
   TableCell,
   TableHead,
   TableBody,
+  TextField,
 } from "@material-ui/core";
 import { UserInfo } from "../AccessForm";
 import { Person, TrendingUp, People } from "@material-ui/icons";
 import ManTradesTable from "../ManTradesTable";
 import axios from "axios";
+import NumberFormat from "react-number-format";
 
 const drawerWidth = 200;
 let BASE_DOMAIN = `https://api.withlaguna.com`;
@@ -66,17 +69,19 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Profile = () => {
+const Profile = ({ editId }) => {
   const [editing, setEditing] = useState(false);
-  return editing && <UserInfo />;
+  return editing && <UserInfo editId={editId} />;
 };
 
-const Portfolios = () => {
-  return <ManTradesTable />;
+const Portfolios = ({ editId }) => {
+  return <ManTradesTable editId={editId} />;
 };
 
 const Subscribers = ({ editId }) => {
   const [subs, setSubs] = useState([]);
+  const [newSub, setNewSub] = useState({ name: "", phone: "" });
+  const [err, setErr] = useState("");
   useEffect(() => {
     axios
       .get(`${BASE_DOMAIN}/stonks/access/subscribers`, {
@@ -86,27 +91,95 @@ const Subscribers = ({ editId }) => {
         setSubs(res.data.subscribers);
       });
   }, []);
+
+  const handleSubmit = () => {
+    axios
+      .post(`${BASE_DOMAIN}/stonks/submit`, {
+        ...newSub,
+        edit_id: editId,
+      })
+      .then(() => {
+        setSubs([...subs, newSub]);
+        setNewSub({ name: "", phone: "" });
+      })
+      .catch((error) => {
+        if (error.response) {
+          setErr(error.response.data.err);
+        } else {
+          setErr("Please email support@withlaguna.com");
+        }
+      });
+  };
   return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          {["Name", "Phone", "Date added"].map((o) => (
-            <TableCell>{o}</TableCell>
-          ))}
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {subs.map((sub) => {
-          return (
-            <TableRow>
-              <TableCell>{sub.name}</TableCell>
-              <TableCell>{sub.phone}</TableCell>
-              <TableCell>{sub.created_date}</TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+    <>
+      <Typography variant="h5">
+        {!!subs.length ? subs.length : 0} subscribers
+      </Typography>
+      <Table>
+        <TableHead>
+          <TableRow>
+            {["Name", "Phone", "Date added"].map((o) => (
+              <TableCell>{o}</TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          <TableRow>
+            <TableCell>
+              <TextField
+                label="name"
+                value={newSub.name}
+                onChange={(e) =>
+                  setNewSub(Object.assign({}, newSub, { name: e.target.value }))
+                }
+              />
+            </TableCell>
+            <TableCell>
+              <NumberFormat
+                value={newSub.phone}
+                format="(###) ###-####"
+                customInput={TextField}
+                onValueChange={(values) => {
+                  const { formattedValue, value } = values;
+                  setNewSub(Object.assign({}, newSub, { phone: value }));
+                }}
+                placeholder="(555)-123-4567"
+                label="phone"
+                helperText={!!err ? err : ""}
+                err={!!err}
+              />
+            </TableCell>
+            <TableCell>
+              <Button
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to top right, #A01A7D, #EC4067)",
+                  color: "white",
+                }}
+                onClick={handleSubmit}
+              >
+                Add new sub
+              </Button>
+            </TableCell>
+          </TableRow>
+          {subs.map((sub) => {
+            return (
+              <TableRow>
+                <TableCell>{sub.name}</TableCell>
+                <TableCell>
+                  <NumberFormat
+                    displayType="text"
+                    value={sub.phone}
+                    format="(###) ###-####"
+                  ></NumberFormat>
+                </TableCell>
+                <TableCell>{sub.created_date}</TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    </>
   );
 };
 
@@ -129,7 +202,7 @@ function Admin(props) {
   const Views = [
     {
       title: "My profile",
-      component: <Profile />,
+      component: <Profile editId={edit_id} />,
       icon: <Person />,
     },
     {
