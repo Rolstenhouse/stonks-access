@@ -2,13 +2,20 @@ import React, { useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import { usePlaidLink } from "react-plaid-link";
 
-import { Lock } from "@material-ui/icons";
 import { useTheme } from "@material-ui/core/styles";
 import useWindowSize from "react-use/lib/useWindowSize";
 import Confetti from "react-confetti";
 import { EnterTradesTable } from "./EnterTradesTable";
 import ManTradesTable from "./ManTradesTable";
-import { ArrowBackIosRounded } from "@material-ui/icons";
+import {
+  ArrowBackIosRounded,
+  Link as LinkIcon,
+  Twitter,
+  YouTube,
+  Email,
+  Lock,
+  PlusOne,
+} from "@material-ui/icons";
 /*********
  * 3 Steps:ti
  * 1) Check Access Code
@@ -32,12 +39,106 @@ import {
   LinearProgress,
   Link,
   IconButton,
+  Table,
+  TableHead,
+  TableCell,
+  TableRow,
+  TableBody,
+  Select,
+  MenuItem,
 } from "@material-ui/core";
 
 import { Alert } from "@material-ui/lab";
 
 let BASE_DOMAIN = `https://api.withlaguna.com`;
-if (process.env.NODE_ENV === "development") BASE_DOMAIN = "http://0.0.0.0:5000";
+// if (process.env.NODE_ENV === "development") BASE_DOMAIN = "http://0.0.0.0:5000";
+
+const ICONS = {
+  twitter: Twitter,
+  youtube: YouTube,
+  general: LinkIcon,
+  newsletter: Email,
+};
+
+const LinksUpload = ({ links, setLinks }) => {
+  let alternateLinks = Object.keys(ICONS)
+    .map((o) => {
+      return { link_type: o, url: "" };
+    })
+    .filter((o) => !links.map((l) => l.link_type).includes(o.link_type));
+
+  const [newLink, setNewLink] = useState({ link_type: "", url: "" });
+  const handleSubmit = () => {
+    setLinks([...links, newLink]);
+  };
+
+  const handleDelete = (index) => {
+    let templinks = links;
+    templinks.splice(index);
+    setLinks(templinks);
+  };
+
+  return (
+    <>
+      <Table>
+        <TableHead>
+          <TableRow>
+            {["Link type (up to 4)", "URL", ""].map((o) => (
+              <TableCell>{o}</TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {links.map((link, index) => {
+            const Icon = ICONS[link.link_type];
+            return (
+              <TableRow>
+                <TableCell>
+                  <Icon />
+                </TableCell>
+                <TableCell>{link.url}</TableCell>
+                <TableCell>
+                  <Button onClick={() => handleDelete(index)}>Delete</Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
+          <TableRow>
+            <TableCell>
+              <Select
+                value={newLink.link_type}
+                onChange={(e) =>
+                  setNewLink({ ...newLink, link_type: e.target.value })
+                }
+              >
+                {alternateLinks.map((al) => {
+                  const DIcon = ICONS[al.link_type];
+                  return (
+                    <MenuItem value={al.link_type}>
+                      <DIcon />
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+              <Typography variant="caption">{newLink.link_type}</Typography>
+            </TableCell>
+            <TableCell>
+              <TextField
+                value={newLink.url}
+                onChange={(e) =>
+                  setNewLink({ ...newLink, url: e.target.value })
+                }
+              />
+            </TableCell>
+            <TableCell>
+              <Button onClick={handleSubmit}>Add</Button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </>
+  );
+};
 
 const AccessCode = ({ advanceStep }) => {
   const [input, setInput] = useState("");
@@ -123,6 +224,7 @@ export const UserInfo = ({
   const [phone, setPhone] = useState(editDetails.phone);
   const [showAmounts, setShowAmounts] = useState(editDetails.show_amounts);
   const [userId, setDangerousUserId] = useState("");
+  const [links, setLinks] = useState(editDetails.links);
 
   useEffect(() => {
     setTitle(editDetails.title);
@@ -133,6 +235,7 @@ export const UserInfo = ({
     setEmail(editDetails.email);
     setPhone(editDetails.phone);
     setShowAmounts(editDetails.show_amounts);
+    setLinks(editDetails.links);
 
     //
     if (!!editId) {
@@ -160,6 +263,7 @@ export const UserInfo = ({
         phone: phone,
         show_amounts: showAmounts === "yes",
         edit_id: editId,
+        links: links
       })
       .then((res) => {
         if (res.data.allow) {
@@ -176,6 +280,7 @@ export const UserInfo = ({
             phone: phone,
             plaid_connected: editDetails.plaid_connected,
             editUrl: res.data.editUrl,
+            links: links
           });
           advanceStep();
         } else {
@@ -286,13 +391,7 @@ export const UserInfo = ({
             helperText="Ex) Trading on long-term horizons"
             fullWidth
           ></TextField>
-          <TextField
-            value={link}
-            onChange={(e) => setLink(e.target.value)}
-            label="Personal Bio Link (optional)"
-            helperText="Twitter handle, website, Linkedin, etc. Write as https://withterra.com"
-            fullWidth
-          ></TextField>
+          <LinksUpload links={links} setLinks={setLinks} />
           <TextField
             value={subdomain}
             onChange={(e) => {
@@ -410,12 +509,6 @@ export const UserInfo = ({
           </Button>
         </div>
       </form>
-      {!!userId && (
-        <>
-          <Typography variant="h4">Manual trades</Typography>
-          <ManTradesTable userId={userId} />
-        </>
-      )}
     </>
   );
 };
@@ -896,22 +989,22 @@ const SignIn = ({}) => {
   );
 };
 
-const fetchEditDetails =  async (edit_id) =>{
-  await axios
-  .get(`${BASE_DOMAIN}/stonks/access/edit_info`, {
-    params: {
-      edit_id: edit_id,
-    },
-  })
-  .then((res) => {
-    let editable = Object.assign({}, res.data);
-    editable.show_amounts = !!editable.show_amounts ? "yes" : "no";
-    return editable
-  })
-  .catch((err) => {
-    return "err"
-  });
-}
+export const fetchEditDetails = (edit_id, setEdit) => {
+  axios
+    .get(`${BASE_DOMAIN}/stonks/access/edit_info`, {
+      params: {
+        edit_id: edit_id,
+      },
+    })
+    .then((res) => {
+      let editable = Object.assign({}, res.data);
+      editable.show_amounts = !!editable.show_amounts ? "yes" : "no";
+      setEdit(editable);
+    })
+    .catch((err) => {
+      setEdit("err");
+    });
+};
 
 export const AccessForm = () => {
   // Ignore Access Code
@@ -930,6 +1023,7 @@ export const AccessForm = () => {
     email: "",
     phone: "",
     plaid_connected: false,
+    links: [],
   });
   const theme = useTheme();
 

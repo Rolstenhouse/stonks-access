@@ -26,11 +26,13 @@ import {
   TableBody,
   TextField,
 } from "@material-ui/core";
-import { UserInfo } from "../AccessForm";
+import { UserInfo, fetchEditDetails } from "../AccessForm";
 import { Person, TrendingUp, People } from "@material-ui/icons";
 import ManTradesTable from "../ManTradesTable";
 import axios from "axios";
 import NumberFormat from "react-number-format";
+import { Editor } from "react-draft-wysiwyg";
+import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 
 const drawerWidth = 200;
 let BASE_DOMAIN = `https://api.withlaguna.com`;
@@ -69,13 +71,79 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const Profile = ({ editId }) => {
-  const [editing, setEditing] = useState(false);
-  return editing && <UserInfo editId={editId} />;
+const Profile = ({ editId, editDetails, setEditDetails }) => {
+  return <UserInfo editId={editId} editDetails={editDetails} setEditDetails={setEditDetails} />;
 };
 
-const Portfolios = ({ editId }) => {
-  return <ManTradesTable editId={editId} />;
+const HoldingsTableRow = ({ h }) => {
+  const [addingMemo, setAddingMemo] = useState(false);
+  const [editorState, setEditorState] = useState();
+
+  const onEditorStateChange = (e) => {
+    setEditorState(e);
+  }
+  return (
+    <>
+      <TableRow>
+        <TableCell>{h.ticker_symbol}</TableCell>
+        <TableCell>{h.memo}</TableCell>
+        <TableCell>
+          <Button onClick={() => setAddingMemo(!addingMemo)}>Edit memo</Button>
+        </TableCell>
+      </TableRow>
+      {addingMemo && (
+        <TableRow>
+          <Editor
+            editorState={editorState}
+            toolbarClassName="toolbarClassName"
+            wrapperClassName="wrapperClassName"
+            editorClassName="editorClassName"
+            onEditorStateChange={onEditorStateChange}
+          />
+        </TableRow>
+      )}
+    </>
+  );
+};
+
+const HoldingsTable = ({ editId, subdomain }) => {
+  useEffect(() => {
+    fetchPortfolio();
+  }, [subdomain]);
+
+  const [holdings, setHoldings] = useState([]);
+  const fetchPortfolio = () => {
+    axios.get(`${BASE_DOMAIN}/stonks/holdings/${subdomain}`).then((res) => {
+      setHoldings(res.data.holdings);
+    });
+  };
+  return (
+    <>
+      <Table>
+        <TableHead>
+          <TableRow>
+            {["Ticker", "Memo"].map((o) => {
+              <TableCell>{o}</TableCell>;
+            })}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {holdings.map((h) => {
+            return <HoldingsTableRow h={h} editId={editId} />;
+          })}
+        </TableBody>
+      </Table>
+    </>
+  );
+};
+
+const Portfolios = ({ editId, subdomain }) => {
+  return (
+    <>
+      {subdomain && <HoldingsTable editId={editId} subdomain={subdomain} />}
+      <ManTradesTable editId={editId} />
+    </>
+  );
 };
 
 const Subscribers = ({ editId }) => {
@@ -140,7 +208,7 @@ const Subscribers = ({ editId }) => {
                 format="(###) ###-####"
                 customInput={TextField}
                 onValueChange={(values) => {
-                  const { formattedValue, value } = values;
+                  const { value } = values;
                   setNewSub(Object.assign({}, newSub, { phone: value }));
                 }}
                 placeholder="(555)-123-4567"
@@ -191,10 +259,30 @@ function Admin(props) {
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-  const [activeView, setActiveView] = useState(2);
+  const [activeView, setActiveView] = useState(0);
+  const [editDetails, setEditDetails] = useState({
+    title: "",
+    description: "",
+    link: "",
+    subdomain: "",
+    show_amounts: "no",
+    name: "",
+    email: "",
+    phone: "",
+    plaid_connected: false,
+    links: []
+  });
 
   let params = new URLSearchParams(props.location.search);
   let edit_id = params.get("edit");
+
+  useEffect(() => {
+    fetchEditDetails(edit_id, (e) => {
+      console.log(e);
+      setEditDetails(e);
+    });
+  }, []);
+
   if (!edit_id) {
     return "Access not allowed. If you believe this was in error please contact support";
   }
@@ -202,12 +290,14 @@ function Admin(props) {
   const Views = [
     {
       title: "My profile",
-      component: <Profile editId={edit_id} />,
+      component: <Profile editId={edit_id} editDetails={editDetails} setEditDetails={setEditDetails} />,
       icon: <Person />,
     },
     {
       title: "Portfolios",
-      component: <Portfolios />,
+      component: (
+        <Portfolios editId={edit_id} subdomain={editDetails.subdomain} />
+      ),
       icon: <TrendingUp />,
     },
     {
