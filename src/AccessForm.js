@@ -8,9 +8,6 @@ import useWindowSize from "react-use/lib/useWindowSize";
 import Confetti from "react-confetti";
 import { EnterTradesTable } from "./EnterTradesTable";
 import ManTradesTable from "./ManTradesTable";
-import MaskedInput from "react-text-mask";
-import { Formik, Form, Field } from "formik";
-import { Redirect } from "react-router";
 import { ArrowBackIosRounded } from "@material-ui/icons";
 /*********
  * 3 Steps:ti
@@ -34,7 +31,7 @@ import {
   CircularProgress,
   LinearProgress,
   Link,
-  IconButton
+  IconButton,
 } from "@material-ui/core";
 
 import { Alert } from "@material-ui/lab";
@@ -102,7 +99,7 @@ const AccessCode = ({ advanceStep }) => {
   );
 };
 
-const UserInfo = ({
+export const UserInfo = ({
   advanceStep,
   setUserId,
   editId,
@@ -899,6 +896,23 @@ const SignIn = ({}) => {
   );
 };
 
+const fetchEditDetails =  async (edit_id) =>{
+  await axios
+  .get(`${BASE_DOMAIN}/stonks/access/edit_info`, {
+    params: {
+      edit_id: edit_id,
+    },
+  })
+  .then((res) => {
+    let editable = Object.assign({}, res.data);
+    editable.show_amounts = !!editable.show_amounts ? "yes" : "no";
+    return editable
+  })
+  .catch((err) => {
+    return "err"
+  });
+}
+
 export const AccessForm = () => {
   // Ignore Access Code
   const [step, setStep] = useState(1);
@@ -1014,13 +1028,19 @@ export const AccessForm = () => {
         minHeight: "100vh",
         backgroundImage: "linear-gradient(to top right, #669bbc, #ecd1e5)",
       }}
+      className="App"
     >
       <Grid item xs={11} sm={8} md={6}>
-      {(step == 7 || step ==5) && <IconButton size="small" style={{float: 'left',  marginTop: theme.spacing(3)}}
-                    onClick={() => setStep(2)}>
-                <ArrowBackIosRounded/>
-                Back
-        </IconButton>}
+        {(step == 7 || step == 5) && (
+          <IconButton
+            size="small"
+            style={{ float: "left", marginTop: theme.spacing(3) }}
+            onClick={() => setStep(2)}
+          >
+            <ArrowBackIosRounded />
+            Back
+          </IconButton>
+        )}
         <Paper
           style={{
             paddingTop: theme.spacing(12),
