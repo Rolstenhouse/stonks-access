@@ -70,11 +70,12 @@ const LinksUpload = ({ links, setLinks }) => {
   const [newLink, setNewLink] = useState({ link_type: "", url: "" });
   const handleSubmit = () => {
     setLinks([...links, newLink]);
+    setNewLink({ link_type: "", url: "" });
   };
 
   const handleDelete = (index) => {
     let templinks = links;
-    templinks.splice(index);
+    templinks.splice(index, 1);
     setLinks(templinks);
   };
 
@@ -263,7 +264,7 @@ export const UserInfo = ({
         phone: phone,
         show_amounts: showAmounts === "yes",
         edit_id: editId,
-        links: links
+        links: links,
       })
       .then((res) => {
         if (res.data.allow) {
@@ -280,7 +281,7 @@ export const UserInfo = ({
             phone: phone,
             plaid_connected: editDetails.plaid_connected,
             editUrl: res.data.editUrl,
-            links: links
+            links: links,
           });
           advanceStep();
         } else {
