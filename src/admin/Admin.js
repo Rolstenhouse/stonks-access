@@ -1,19 +1,4 @@
 import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
-import AppBar from "@material-ui/core/AppBar";
-import CssBaseline from "@material-ui/core/CssBaseline";
-import Divider from "@material-ui/core/Divider";
-import Drawer from "@material-ui/core/Drawer";
-import Hidden from "@material-ui/core/Hidden";
-import IconButton from "@material-ui/core/IconButton";
-import InboxIcon from "@material-ui/icons/MoveToInbox";
-import List from "@material-ui/core/List";
-import ListItem from "@material-ui/core/ListItem";
-import ListItemIcon from "@material-ui/core/ListItemIcon";
-import ListItemText from "@material-ui/core/ListItemText";
-import MailIcon from "@material-ui/icons/Mail";
-import MenuIcon from "@material-ui/icons/Menu";
-import Toolbar from "@material-ui/core/Toolbar";
 import { makeStyles, useTheme } from "@material-ui/core/styles";
 import {
   Button,
@@ -25,9 +10,21 @@ import {
   TableHead,
   TableBody,
   TextField,
+  Snackbar,
+  AppBar,
+  Toolbar,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  CssBaseline,
+  Drawer,
+  Hidden,
+  IconButton,
 } from "@material-ui/core";
+import { Alert } from "@material-ui/lab";
 import { UserInfo, fetchEditDetails } from "../AccessForm";
-import { Person, TrendingUp, People } from "@material-ui/icons";
+import { Person, TrendingUp, People, Menu } from "@material-ui/icons";
 import ManTradesTable from "../ManTradesTable";
 import axios from "axios";
 import NumberFormat from "react-number-format";
@@ -72,7 +69,33 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Profile = ({ editId, editDetails, setEditDetails }) => {
-  return <UserInfo editId={editId} editDetails={editDetails} setEditDetails={setEditDetails} />;
+  const [success, setSuccess] = useState(false);
+
+  const handleSubmit = () => {
+    setSuccess(true);
+  };
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSuccess(false);
+  };
+  return (
+    <>
+      <UserInfo
+        editId={editId}
+        editDetails={editDetails}
+        setEditDetails={setEditDetails}
+        onFormSubmit={handleSubmit}
+      />
+      <Snackbar open={success} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="success">
+          Updated succesfully!
+        </Alert>
+      </Snackbar>
+    </>
+  );
 };
 
 const HoldingsTableRow = ({ h }) => {
@@ -81,7 +104,7 @@ const HoldingsTableRow = ({ h }) => {
 
   const onEditorStateChange = (e) => {
     setEditorState(e);
-  }
+  };
   return (
     <>
       <TableRow>
@@ -270,7 +293,7 @@ function Admin(props) {
     email: "",
     phone: "",
     plaid_connected: false,
-    links: []
+    links: [],
   });
 
   let params = new URLSearchParams(props.location.search);
@@ -290,7 +313,13 @@ function Admin(props) {
   const Views = [
     {
       title: "My profile",
-      component: <Profile editId={edit_id} editDetails={editDetails} setEditDetails={setEditDetails} />,
+      component: (
+        <Profile
+          editId={edit_id}
+          editDetails={editDetails}
+          setEditDetails={setEditDetails}
+        />
+      ),
       icon: <Person />,
     },
     {
@@ -348,7 +377,7 @@ function Admin(props) {
                 onClick={handleDrawerToggle}
                 className={classes.menuButton}
               >
-                <MenuIcon />
+                <Menu />
               </IconButton>
             </Toolbar>
           </AppBar>

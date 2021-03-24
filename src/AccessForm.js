@@ -76,7 +76,7 @@ const LinksUpload = ({ links, setLinks }) => {
   const handleDelete = (index) => {
     let templinks = links;
     templinks.splice(index, 1);
-    setLinks(templinks);
+    setLinks([...templinks]);
   };
 
   return (
@@ -99,42 +99,54 @@ const LinksUpload = ({ links, setLinks }) => {
                 </TableCell>
                 <TableCell>{link.url}</TableCell>
                 <TableCell>
-                  <Button onClick={() => handleDelete(index)}>Delete</Button>
+                  <Button
+                    style={{ backgroundColor: "#EC4067", color: "white" }}
+                    onClick={() => handleDelete(index)}
+                  >
+                    Delete
+                  </Button>
                 </TableCell>
               </TableRow>
             );
           })}
-          <TableRow>
-            <TableCell>
-              <Select
-                value={newLink.link_type}
-                onChange={(e) =>
-                  setNewLink({ ...newLink, link_type: e.target.value })
-                }
-              >
-                {alternateLinks.map((al) => {
-                  const DIcon = ICONS[al.link_type];
-                  return (
-                    <MenuItem value={al.link_type}>
-                      <DIcon />
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-              <Typography variant="caption">{newLink.link_type}</Typography>
-            </TableCell>
-            <TableCell>
-              <TextField
-                value={newLink.url}
-                onChange={(e) =>
-                  setNewLink({ ...newLink, url: e.target.value })
-                }
-              />
-            </TableCell>
-            <TableCell>
-              <Button onClick={handleSubmit}>Add</Button>
-            </TableCell>
-          </TableRow>
+          {links.length < 4 && (
+            <TableRow>
+              <TableCell>
+                <Select
+                  value={newLink.link_type}
+                  onChange={(e) =>
+                    setNewLink({ ...newLink, link_type: e.target.value })
+                  }
+                >
+                  {alternateLinks.map((al) => {
+                    const DIcon = ICONS[al.link_type];
+                    return (
+                      <MenuItem value={al.link_type}>
+                        <DIcon />
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+                <Typography variant="caption">{newLink.link_type}</Typography>
+              </TableCell>
+              <TableCell>
+                <TextField
+                  value={newLink.url}
+                  onChange={(e) =>
+                    setNewLink({ ...newLink, url: e.target.value })
+                  }
+                />
+              </TableCell>
+              <TableCell>
+                <Button
+                  onClick={handleSubmit}
+                  style={{ backgroundColor: "#729FBF", color: "white" }}
+                >
+                  Add
+                </Button>
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </>
@@ -202,7 +214,7 @@ const AccessCode = ({ advanceStep }) => {
 };
 
 export const UserInfo = ({
-  advanceStep,
+  onFormSubmit,
   setUserId,
   editId,
   editDetails,
@@ -211,10 +223,6 @@ export const UserInfo = ({
 }) => {
   const theme = useTheme();
   const [error, setError] = useState(false);
-
-  const handleFailure = () => {
-    setError(true);
-  };
 
   const [title, setTitle] = useState(editDetails.title);
   const [description, setDescription] = useState(editDetails.description);
@@ -283,13 +291,17 @@ export const UserInfo = ({
             editUrl: res.data.editUrl,
             links: links,
           });
-          advanceStep();
+          onFormSubmit();
         } else {
-          handleFailure();
+          setError("An undescribed error occurred");
         }
       })
-      .catch(() => {
-        handleFailure();
+      .catch((err) => {
+        if (err.response) {
+          setError(err.response.data.err);
+        } else {
+          setError("Please email support@withlaguna.com");
+        }
       });
   };
 
@@ -479,11 +491,7 @@ export const UserInfo = ({
             fullWidth
           ></TextField>
         </Paper>
-        {error && (
-          <Typography color="red">
-            Something went wrong :(. Please double check your information
-          </Typography>
-        )}
+        {error && <Typography color="red">{error}</Typography>}
         <div
           style={{
             display: "flex",
@@ -1083,7 +1091,7 @@ export const AccessForm = () => {
       else if (step === 1)
         return (
           <UserInfo
-            advanceStep={() =>
+            onFormSubmit={() =>
               editDetails.plaid_connected && !refresh ? "" : setStep(2)
             }
             setUserId={setUserId}
