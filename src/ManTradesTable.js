@@ -107,7 +107,7 @@ class ManTradesTable extends React.Component {
     return (
       <div>
         <Typography variant="h4">
-          Manually Enter Your Holdings to Create Your Portfolio
+          Manual holdings
         </Typography>
         <Typography style={{ color: "gray" }} variant="subtitle1">
           Ensure your percentages add up to 100%

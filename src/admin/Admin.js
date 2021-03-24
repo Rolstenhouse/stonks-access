@@ -29,7 +29,17 @@ import ManTradesTable from "../ManTradesTable";
 import axios from "axios";
 import NumberFormat from "react-number-format";
 import { Editor } from "react-draft-wysiwyg";
+import {
+  ContentState,
+  EditorState,
+  convertFromHTML,
+  convertFromRaw,
+  convertToRaw,
+} from "draft-js";
+import draftToHtml from "draftjs-to-html";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
+import renderHtml from "react-render-html";
+import renderHTML from "react-render-html";
 
 const drawerWidth = 200;
 let BASE_DOMAIN = `https://api.withlaguna.com`;
@@ -98,31 +108,74 @@ const Profile = ({ editId, editDetails, setEditDetails }) => {
   );
 };
 
-const HoldingsTableRow = ({ h }) => {
+const HoldingsTableRow = ({ h, editId }) => {
+  const blocksFromHTML = convertFromHTML(`<div>${h.memo ? h.memo : ""}</div>`);
+  const initialContentState = ContentState.createFromBlockArray(
+    blocksFromHTML.contentBlocks,
+    blocksFromHTML.entityMap
+  );
+
   const [addingMemo, setAddingMemo] = useState(false);
-  const [editorState, setEditorState] = useState();
+  const [editorState, setEditorState] = useState(
+    EditorState.createWithContent(initialContentState)
+  );
+
+  // const initialContentState = convertFromRaw(h.memo);
 
   const onEditorStateChange = (e) => {
     setEditorState(e);
+  };
+
+  const onContentStateChange = (e) => {};
+
+  const handleClick = () => {
+    if (addingMemo) {
+      axios
+        .post(`${BASE_DOMAIN}/stonks/access/memo/update`, {
+          holding_id: h.id,
+          edit_id: editId,
+          memo: draftToHtml(convertToRaw(editorState.getCurrentContent())),
+        })
+        .then((res) => {});
+    }
+    setAddingMemo(!addingMemo);
   };
   return (
     <>
       <TableRow>
         <TableCell>{h.ticker_symbol}</TableCell>
-        <TableCell>{h.memo}</TableCell>
         <TableCell>
-          <Button onClick={() => setAddingMemo(!addingMemo)}>Edit memo</Button>
+          {renderHTML(
+            h.memo ? (
+              h.memo
+            ) : editorState.getCurrentContent() && !addingMemo ? (
+              draftToHtml(convertToRaw(editorState.getCurrentContent()))
+            ) : (
+              <Typography variant="caption">Action needed</Typography>
+            )
+          )}
+        </TableCell>
+        <TableCell>
+          <Button
+            style={{ backgroundColor: "#729FBF", color: "white" }}
+            onClick={handleClick}
+          >
+            {addingMemo ? "Save" : "Edit memo"}
+          </Button>
         </TableCell>
       </TableRow>
       {addingMemo && (
-        <TableRow>
-          <Editor
-            editorState={editorState}
-            toolbarClassName="toolbarClassName"
-            wrapperClassName="wrapperClassName"
-            editorClassName="editorClassName"
-            onEditorStateChange={onEditorStateChange}
-          />
+        <TableRow style={{ backgroundColor: "#f1f5f8" }}>
+          <TableCell colSpan={3}>
+            <Editor
+              editorState={editorState}
+              toolbarClassName="toolbarClassName"
+              wrapperClassName="wrapperClassName"
+              editorClassName="editorClassName"
+              onEditorStateChange={onEditorStateChange}
+              onContentStateChange={onContentStateChange}
+            />
+          </TableCell>
         </TableRow>
       )}
     </>
@@ -142,11 +195,15 @@ const HoldingsTable = ({ editId, subdomain }) => {
   };
   return (
     <>
+      <Typography variant="h4">Holdings & memos</Typography>
+      <Typography style={{ color: "gray" }} variant="subtitle1">
+        Holdings below are imported from plaid and manual trades
+      </Typography>
       <Table>
         <TableHead>
           <TableRow>
-            {["Ticker", "Memo"].map((o) => {
-              <TableCell>{o}</TableCell>;
+            {["Ticker", "Memo", "Action"].map((o) => {
+              return <TableCell>{o}</TableCell>;
             })}
           </TableRow>
         </TableHead>
@@ -163,8 +220,16 @@ const HoldingsTable = ({ editId, subdomain }) => {
 const Portfolios = ({ editId, subdomain }) => {
   return (
     <>
-      {subdomain && <HoldingsTable editId={editId} subdomain={subdomain} />}
-      <ManTradesTable editId={editId} />
+      <Grid container spacing={2}>
+        <Grid item md={6}>
+          {!!subdomain && (
+            <HoldingsTable editId={editId} subdomain={subdomain} />
+          )}
+        </Grid>
+        <Grid item md={6}>
+          <ManTradesTable editId={editId} />
+        </Grid>
+      </Grid>
     </>
   );
 };
@@ -282,7 +347,7 @@ function Admin(props) {
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-  const [activeView, setActiveView] = useState(0);
+  const [activeView, setActiveView] = useState(1);
   const [editDetails, setEditDetails] = useState({
     title: "",
     description: "",
