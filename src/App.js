@@ -40,7 +40,7 @@ export default function App() {
         <Switch>
           <Route exact path="/" component={AccessForm} />
           <Route exact path="/admin" component={Admin} />
-          <Route component={() => <div>404 Not found 1</div>} />
+          <Route component={() => <div>404 Not found</div>} />
         </Switch>
       </HashRouter>
     </ThemeProvider>
