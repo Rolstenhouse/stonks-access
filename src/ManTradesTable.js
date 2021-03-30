@@ -31,9 +31,18 @@ class ManTradesTable extends React.Component {
   }
 
   componentDidMount = () => {
-    console.log(this.props.editId);
-
-    axios.get(`${BASE_DOMAIN}/stonks/access/holdings`);
+    axios
+      .get(`${BASE_DOMAIN}/stonks/holdings/manual`, {
+        params: { edit_id: this.props.editId },
+      })
+      .then((res) => {
+        this.setState(
+          { trades: [...res.data.holdings, { ticker: "", weight: null }] },
+          () => {
+            this.calculateWeight();
+          }
+        );
+      });
   };
 
   handleCreate = () => {
@@ -55,6 +64,19 @@ class ManTradesTable extends React.Component {
           this.setState({ errMsg: errMsg });
         }
       });
+  };
+
+  calculateWeight = () => {
+    let validPortfolio = true;
+    const total_weight = this.state.trades.reduce((sum, t) => {
+      return sum + (t.weight ? parseFloat(t.weight) : 0);
+    }, 0);
+    if (total_weight != 100) validPortfolio = false;
+
+    this.setState({
+      total_weight: total_weight,
+      validPortfolio: validPortfolio,
+    });
   };
 
   handleHoldingEdit = (ticker, weight, index) => {
@@ -82,8 +104,6 @@ class ManTradesTable extends React.Component {
       validPortfolio = false;
     }
 
-    console.log("total weight", total_weight);
-
     this.setState({
       trades: new_trades,
       total_weight: total_weight,
@@ -95,7 +115,6 @@ class ManTradesTable extends React.Component {
   render() {
     var data = this.state.trades.map((t, index) => {
       const weight = isNaN(t.weight) ? 0 : t.weight;
-
       const slice = {
         title: t.ticker,
         value: weight,
@@ -106,9 +125,7 @@ class ManTradesTable extends React.Component {
 
     return (
       <div>
-        <Typography variant="h4">
-          Manual holdings
-        </Typography>
+        <Typography variant="h4">Manual holdings</Typography>
         <Typography style={{ color: "gray" }} variant="subtitle1">
           Ensure your percentages add up to 100%
         </Typography>
@@ -144,7 +161,6 @@ class ManTradesTable extends React.Component {
                   style={{
                     color: "red",
                     textAlign: "left",
-
                     marginTop: 5,
                   }}
                 >
