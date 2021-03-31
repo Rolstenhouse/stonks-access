@@ -9,18 +9,36 @@ import Admin from "./admin/Admin";
 const theme = createMuiTheme({
   typography: {
     fontFamily: [
+      "-apple-system",
+      "BlinkMacSystemFont",
+      "Inter",
       "Nunito",
       "Roboto",
       '"Helvetica Neue"',
       "Arial",
       "sans-serif",
     ].join(","),
+    h4: {
+      fontWeight: 700,
+    },
+    h5: {
+      fontWeight: 700,
+    },
+    h6: {
+      fontWeight: 700,
+    },
+    b: { fontWeight: 800 },
   },
   palette: {
     secondary: {
       main: "#ffffff",
     },
   },
+  overrides: {
+    MuiTextField: {
+      marginTop: 4
+    }
+  }
 });
 
 // function App() {

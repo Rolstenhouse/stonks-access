@@ -38,8 +38,9 @@ import {
 } from "draft-js";
 import draftToHtml from "draftjs-to-html";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
-import renderHtml from "react-render-html";
 import renderHTML from "react-render-html";
+
+import { colors } from "../colors";
 
 const drawerWidth = 200;
 let BASE_DOMAIN = `https://api.withlaguna.com`;
@@ -109,7 +110,8 @@ const Profile = ({ editId, editDetails, setEditDetails }) => {
 };
 
 const HoldingsTableRow = ({ h, editId }) => {
-  const blocksFromHTML = convertFromHTML(`<div>${h.memo ? h.memo : ""}</div>`);
+  const memoHtml = `<div>${h.memo ? h.memo : ""}</div>`;
+  const blocksFromHTML = convertFromHTML(memoHtml);
   const initialContentState = ContentState.createFromBlockArray(
     blocksFromHTML.contentBlocks,
     blocksFromHTML.entityMap
@@ -144,29 +146,23 @@ const HoldingsTableRow = ({ h, editId }) => {
     <>
       <TableRow>
         <TableCell>{h.ticker_symbol}</TableCell>
-        <TableCell>
-          {renderHTML(
-            h.memo ? (
-              h.memo
-            ) : editorState.getCurrentContent() && !addingMemo ? (
-              draftToHtml(convertToRaw(editorState.getCurrentContent()))
-            ) : (
-              <Typography variant="caption">Action needed</Typography>
-            )
-          )}
-        </TableCell>
+        <TableCell>{renderHTML(memoHtml)}</TableCell>
         <TableCell>
           <Button
-            style={{ backgroundColor: "#729FBF", color: "white" }}
+            style={{
+              backgroundColor: addingMemo ? colors.purple : colors.blue,
+              color: "white",
+            }}
             onClick={handleClick}
           >
             {addingMemo ? "Save" : "Edit memo"}
           </Button>
         </TableCell>
+        <TableCell>{!!h.plaid_security_id ? "plaid" : "self"}</TableCell>
       </TableRow>
       {addingMemo && (
-        <TableRow style={{ backgroundColor: "#f1f5f8" }}>
-          <TableCell colSpan={3}>
+        <TableRow style={{ backgroundColor: colors.lightBlue }}>
+          <TableCell colSpan={4}>
             <Editor
               editorState={editorState}
               toolbarClassName="toolbarClassName"
@@ -195,15 +191,21 @@ const HoldingsTable = ({ editId, subdomain }) => {
   };
   return (
     <>
-      <Typography variant="h4">Holdings & memos</Typography>
+      <Typography variant="h4">
+        <b>Holdings & memos</b>
+      </Typography>
       <Typography style={{ color: "gray" }} variant="subtitle1">
         Holdings below are imported from plaid and manual trades
       </Typography>
-      <Table>
+      <Table style={{ margin: 20 }}>
         <TableHead>
-          <TableRow>
-            {["Ticker", "Memo", "Action"].map((o) => {
-              return <TableCell>{o}</TableCell>;
+          <TableRow style={{ backgroundColor: colors.lightPurple }}>
+            {["Ticker", "Memo", "Action", "Source"].map((o) => {
+              return (
+                <TableCell>
+                  <b>{o}</b>
+                </TableCell>
+              );
             })}
           </TableRow>
         </TableHead>
@@ -220,13 +222,13 @@ const HoldingsTable = ({ editId, subdomain }) => {
 const Portfolios = ({ editId, subdomain }) => {
   return (
     <>
-      <Grid container spacing={2}>
-        <Grid item md={6}>
+      <Grid container spacing={8}>
+        <Grid item md={12}>
           {!!subdomain && (
             <HoldingsTable editId={editId} subdomain={subdomain} />
           )}
         </Grid>
-        <Grid item md={6}>
+        <Grid item md={12}>
           <ManTradesTable editId={editId} />
         </Grid>
       </Grid>
@@ -268,14 +270,16 @@ const Subscribers = ({ editId }) => {
   };
   return (
     <>
-      <Typography variant="h5">
-        {!!subs.length ? subs.length : 0} subscribers
+      <Typography variant="h4">
+        <b>Manage subscribers ({!!subs.length ? subs.length : 0})</b>
       </Typography>
-      <Table>
+      <Table style={{ margin: 20 }}>
         <TableHead>
-          <TableRow>
+          <TableRow style={{ backgroundColor: colors.lightBlue }}>
             {["Name", "Phone", "Date added"].map((o) => (
-              <TableCell>{o}</TableCell>
+              <TableCell>
+                <b>{o}</b>
+              </TableCell>
             ))}
           </TableRow>
         </TableHead>
@@ -403,7 +407,20 @@ function Admin(props) {
 
   const drawer = (
     <div>
-      <div className={classes.toolbar} />
+      <div className={classes.toolbar}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: theme.spacing(2),
+          }}
+        >
+          <a href="https://withlaguna.com">
+            <img src="FullLogoBlack.png" width="80" />
+          </a>
+        </div>
+      </div>
       <List>
         {Views.map((view, index) => (
           <ListItem

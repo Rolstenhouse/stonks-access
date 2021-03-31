@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import TradeRow from "./TradeRow";
 import { PieChart } from "react-minimal-pie-chart";
-import { piePallete } from "./colors";
+import { piePallete, colors } from "./colors";
 
 import {
   Button,
@@ -136,9 +136,12 @@ class ManTradesTable extends React.Component {
           <div style={{ flexGrow: "1", marginLeft: 20 }}>
             <Table>
               <TableHead>
-                <TableRow>
-                  <TableCell>Ticker</TableCell>
-                  <TableCell>Percent</TableCell>
+                <TableRow style={{backgroundColor: colors.lightBlue}}>
+                  {["Ticker", "Percent"].map((o) => (
+                    <TableCell>
+                      <b>{o}</b>
+                    </TableCell>
+                  ))}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -197,7 +200,7 @@ class ManTradesTable extends React.Component {
                 marginTop: 20,
               }}
             >
-              Create Portfolio
+              {!!this.props.editId ? 'Update Portfolio' : 'Create Portfolio'}
             </Button>
           </div>
 

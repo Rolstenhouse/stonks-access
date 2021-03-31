@@ -84,7 +84,7 @@ const LinksUpload = ({ links, setLinks }) => {
       <Table>
         <TableHead>
           <TableRow>
-            {["Link type (up to 4)", "URL", ""].map((o) => (
+            {["Social media links (up to 4)", "URL", ""].map((o) => (
               <TableCell>{o}</TableCell>
             ))}
           </TableRow>
@@ -331,7 +331,9 @@ export const UserInfo = ({
 
   return (
     <>
-      <Typography variant="h4">Account creation and configuration</Typography>
+      <Typography variant="h4" style={{marginBottom: theme.spacing(2)}}>
+        <b>Account creation and configuration</b>
+      </Typography>
       {!editId && (
         <>
           <Typography variant="h6">
@@ -387,7 +389,8 @@ export const UserInfo = ({
         >
           <Typography variant="h6">Your page information</Typography>
           <Typography variant="caption">
-            Used to customize your page :){" "}
+            <b>Used to customize your page :) </b>
+
             <Link href="https://rob.withlaguna.com">Sample Site</Link>
           </Typography>
           <TextField
@@ -396,6 +399,7 @@ export const UserInfo = ({
             label="Title"
             helperText="Ex) Rob's Stonks"
             fullWidth
+            style={{ marginTop: theme.spacing(2) }}
           ></TextField>
           <TextField
             value={description}
@@ -403,6 +407,7 @@ export const UserInfo = ({
             label="Description"
             helperText="Ex) Trading on long-term horizons"
             fullWidth
+            style={{ marginTop: theme.spacing(2) }}
           ></TextField>
           <LinksUpload links={links} setLinks={setLinks} />
           <TextField
@@ -418,10 +423,11 @@ export const UserInfo = ({
             helperText={
               !!subdomainError
                 ? subdomainError
-                : "i.e enter 'rob' if you want, rob.withlaguna.com"
+                : "i.e 'rob' would look like, rob.withlaguna.com"
             }
             error={!!subdomainError}
             fullWidth
+            style={{ marginTop: theme.spacing(2) }}
           ></TextField>
           <FormControl
             component="fieldset"
@@ -463,9 +469,11 @@ export const UserInfo = ({
             onChange={(e) => setName(e.target.value)}
             label="Full name"
             fullWidth
+            style={{ marginTop: theme.spacing(2) }}
           ></TextField>
           <TextField
             value={email}
+            style={{ marginTop: theme.spacing(2) }}
             onChange={(e) => {
               setEmail(e.target.value);
               setEmailError("");
@@ -479,6 +487,7 @@ export const UserInfo = ({
             fullWidth
           ></TextField>
           <TextField
+            style={{ marginTop: theme.spacing(2) }}
             value={phone}
             onChange={(e) => {
               setPhone(e.target.value);
